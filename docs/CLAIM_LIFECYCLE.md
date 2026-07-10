@@ -247,17 +247,21 @@ V0.2 增加**跨会话可复用主张（cross-session reusable claims）**，且
 
 ## 6. V0.2 最小实现清单（Minimal Implementation Checklist）
 
-### 必须交付（Must ship）
+> **封板 ≠ §6 勾选完毕。** V0.2 正式封板须同时满足：§6 全部交付、§7 在真实 CLI 下复验通过、**实验平台 Phase 2（E1–E5）完成**（见 `docs/EXPERIMENTS.md` §8）。当前：**实现已完成，封板待 Phase 2。**
 
-- [ ] `claims.jsonl` 只追加
-- [ ] `claims_index.json` 从账本重建
-- [ ] `claim promote`（Owner 手动晋升）
-- [ ] `claim retire`（Owner 手动退休）
-- [ ] `claim rebuild-index`（重建索引）
-- [ ] 按 scope 的 Top-K 注入研究 `context` / Guest prompt
-- [ ] Guest 输出解析为 `RESPOND` 事件（SUPPORT|CHALLENGE|RETIRE|DEFER）
-- [ ] `verify_claim_lifecycle`（主张生命周期验收）— 三场会议验收（§7）
-- [ ] promote 时的禁止晋升校验器（non-promotion validator）
+### 必须交付（Must ship）— 代码已实现，封板待 Phase 2
+
+- [x] `claims.jsonl` 只追加 — `lib/claim_lifecycle.py` + `claims/claims.jsonl`
+- [x] `claims_index.json` 从账本重建 — `claim rebuild-index`
+- [x] `claim promote`（Owner 手动晋升）— `--from-state conflicts[N]` + scope + `--evidence`
+- [x] `claim retire`（Owner 手动退休）
+- [x] `claim rebuild-index`（重建索引）
+- [x] `claim list`（只读列表）
+- [x] 按 scope 的 Top-K 注入研究 Guest prompt — `{{prior_claims}}`
+- [x] Guest 输出解析为 `RESPOND` 事件（SUPPORT|CHALLENGE|RETIRE|DEFER）
+- [x] `claim verify`（三场会议验收 §7）— 黄金链路已跑通一次；TSLA 跨会 CHALLENGE 待 E5
+- [x] promote 时的禁止晋升校验器（non-promotion validator）
+- [x] 注入禁用词检查（authority leakage）
 
 ### 明确推迟至 V0.3+
 
@@ -290,9 +294,22 @@ V0.2 增加**跨会话可复用主张（cross-session reusable claims）**，且
 
 **通过标准：** 各步可在 jsonl 中审计；索引可从零重建；禁止手改索引。
 
+### §7 验收记录（进行中）
+
+| 步骤 | 会议 / 命令 | 状态 |
+|------|-------------|------|
+| A promote | `meet-20260710-015200` → `clm-000001` | ✅ 真实 CLI |
+| B 注入 + CHALLENGE | `meet-20260710-015733`（R1 含 mock） | ⚠️ 部分真实；封板前须无 mock 复验 |
+| C retire + verify | `claim retire` + `claim verify` | ✅ 通过 |
+| E5 TSLA 跨会 CHALLENGE | `meet-20260710-023309` 命题 | ❌ Phase 2 待做 |
+
+复现：`docs/EXPERIMENTS.md` §3。
+
 ---
 
-## 8. 指标（Metrics）— 实验报告（Experiment Report）扩展
+## 8. 指标（Metrics）— 实验报告扩展（推迟 V0.3）
+
+> V0.2 封板**不依赖**本节；E4 `model_tier` 属 Phase 2 必填项。
 
 不追踪 `claim_count`（主张数量）。应追踪：
 
@@ -326,9 +343,12 @@ V0.2 增加**跨会话可复用主张（cross-session reusable claims）**，且
 
 | 项目 | 状态 |
 |------|------|
-| 语义闭环（Semantic Loop） | 已交付（研究路径 Research path） |
-| 主张生命周期 V0.2（Claim Lifecycle V0.2） | **设计已冻结 — 实现门槛为 §7 验收规范** |
-| Codex 实现 | **未开始** — 待 Owner 审阅本文档后 |
+| 语义闭环（Semantic Loop） | ✅ 已交付（Research `run-parallel`） |
+| 主张生命周期 V0.2 — §6 实现 | ✅ 代码已交付（`lib/claim_lifecycle.py` + `claim` CLI） |
+| §7 三场会议验收 | ⚠️ 黄金链路已跑通；封板前须真实 CLI 全链复验 + E5 |
+| 实验平台 Phase 2（E1–E5） | ❌ 未完成 — **V0.2 封板前置条件** |
+| Claim 指标 §8 | ⏳ 推迟至 V0.3 |
+| **V0.2 封板** | **未封板** — 待 Phase 2 完成后统一验收 |
 
 ---
 

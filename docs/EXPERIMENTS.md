@@ -216,15 +216,17 @@ max_parallel: 6
 
 ---
 
-## 8. 下一阶段实验计划（Phase 2）
+## 8. 下一阶段实验计划（Phase 2）— V0.2 封板前置
 
-| 编号 | 实验 | 目的 | 方法 |
+> **封板条件：** Claim Lifecycle §6 实现 + §7 真实 CLI 全链复验 + **本节 E1–E5 全部完成**。§6 代码已就绪，**不可**在 Phase 2 完成前标记「可生产」。
+
+| 编号 | 实验 | 目的 | 方法 | 状态 |
 |------|------|------|------|
-| E1 | 单点换贵模型 | 测上限 | 同议题同 context，只换 qwen→grok-4.3 或 claude |
-| E2 | 金融脚本进 context | 测证据层 ROI | `scripts/fetch_equity.py` → `market_context` |
-| E3 | `guest_type: script` | Data Guest 契约 | 跳过 summarizer，raw 直接作证据 |
-| E4 | metrics 加 `model_tier` | A/B 可量化 | 对比 floor vs premium delta |
-| E5 | Claim promote TSLA 命题 | 跨会复用 | promote 可证伪 conflict → 新会议 CHALLENGE |
+| E1 | 单点换贵模型 | 测上限 | 同议题同 context，只换 qwen→grok-4.3 或 claude | ❌ |
+| E2 | 金融脚本进 context | 测证据层 ROI | `scripts/fetch_equity.py` → `market_context` | ❌ |
+| E3 | `guest_type: script` | Data Guest 契约 | 跳过 summarizer，raw 直接作证据 | ❌ |
+| E4 | metrics 加 `model_tier` | A/B 可量化 | 对比 floor vs premium delta | ❌ |
+| E5 | Claim promote TSLA 命题 | 跨会复用 | promote 可证伪 conflict → 新会议 CHALLENGE | ❌ |
 
 **对比指标（每场必填）：**
 
@@ -252,11 +254,12 @@ max_parallel: 6
 
 ## 10. 元结论（Meta）
 
-1. **Claimfold 作为实验平台已验证可行** — 真实 CLI、并行、语义闭环、Claim 全链均可复现。
-2. **当前免费实验 = 最差基线** — 以后 Claude/Codex/Grok 4.3 实验是抬天花板，不是推翻架构。
-3. **模型质量关键，但在「少而稳、角色对、锚定强」前提下** — 不是越多越好。
-4. **下一优先级是证据层（数据脚本）和 metrics 标准化** — 比再加一个免费 120B 更值得。
+1. **Claimfold 作为实验平台已验证可行** — 真实 CLI、并行、语义闭环、Claim 链路可复现。
+2. **Claim Lifecycle V0.2 未封板** — §6 代码已交付，但封板须 Phase 2（E1–E5）完成 + §7 真实 CLI 全链复验。
+3. **当前免费实验 = 最差基线** — Claude/Codex/Grok 4.3 实验抬天花板，不推翻架构。
+4. **模型质量关键，但在「少而稳、角色对、锚定强」前提下** — 不是越多越好。
+5. **下一优先级：Phase 2** — E2/E3 证据层 → E5 TSLA 跨会 Claim → E1/E4 贵模型 A/B。
 
 ---
 
-*最后更新：2026-07-10 | 对应 Git: `7280767` 及此前提交*
+*最后更新：2026-07-10 | V0.2 未封板 · 回滚 premature seal · Git: `28135a8`*
