@@ -1,4 +1,4 @@
-max_parallel: 3
+max_parallel: 6
 
 guests:
   qwen:
@@ -8,13 +8,13 @@ guests:
     command: "opencode run -m gpu-llama/qwen3.6-35b --auto"
     enabled: true
     timeout_seconds: 180
-    allow_parallel: true
+    allow_parallel: false
 
   hy3:
     role_id: geo_policy_risk
     role: "Geopolitical & Policy Risk Officer — 地缘、央行、关税政策"
-    model: "opencode/hy3-free"
-    command: "opencode run -m opencode/hy3-free --auto"
+    model: "openrouter/tencent/hy3:free"
+    command: "opencode run -m openrouter/tencent/hy3:free --auto"
     enabled: true
     timeout_seconds: 180
     allow_parallel: true
@@ -22,17 +22,8 @@ guests:
   north:
     role_id: energy_analyst
     role: "Commodities Desk Head — 黄金、原油、能源"
-    model: "opencode/north-mini-code-free"
-    command: "opencode run -m opencode/north-mini-code-free --auto"
-    enabled: true
-    timeout_seconds: 180
-    allow_parallel: true
-
-  mimo:
-    role_id: equity_strategist
-    role: "Equity Strategist — 美股、A股、港股、行业轮动"
-    model: "opencode/mimo-v2.5-free"
-    command: "opencode run -m opencode/mimo-v2.5-free --auto"
+    model: "openrouter/cohere/north-mini-code:free"
+    command: "opencode run -m openrouter/cohere/north-mini-code:free --auto"
     enabled: true
     timeout_seconds: 180
     allow_parallel: true
@@ -40,16 +31,97 @@ guests:
   nemo:
     role_id: rates_fx_strategist
     role: "Rates & FX Strategist — 美债、美元、人民币、资金流"
-    model: "opencode/nemotron-3-ultra-free"
-    command: "opencode run -m opencode/nemotron-3-ultra-free --auto"
+    model: "openrouter/nvidia/nemotron-3-nano-30b-a3b:free"
+    command: "opencode run -m openrouter/nvidia/nemotron-3-nano-30b-a3b:free --auto"
+    enabled: true
+    timeout_seconds: 180
+    allow_parallel: true
+
+  mimo:
+    role_id: equity_strategist
+    role: "Equity Strategist — 美股、A股、港股、行业轮动"
+    model: "openrouter/qwen/qwen3-next-80b-a3b-instruct:free"
+    command: "opencode run -m openrouter/qwen/qwen3-next-80b-a3b-instruct:free --auto"
+    enabled: true
+    timeout_seconds: 180
+    allow_parallel: true
+
+  gemma26:
+    role_id: generalist_a
+    role: "Generalist Analyst A — Gemma 4 26B"
+    model: "openrouter/google/gemma-4-26b-a4b-it:free"
+    command: "opencode run -m openrouter/google/gemma-4-26b-a4b-it:free --auto"
+    enabled: true
+    timeout_seconds: 180
+    allow_parallel: true
+
+  gemma31:
+    role_id: generalist_b
+    role: "Generalist Analyst B — Gemma 4 31B"
+    model: "openrouter/google/gemma-4-31b-it:free"
+    command: "opencode run -m openrouter/google/gemma-4-31b-it:free --auto"
+    enabled: true
+    timeout_seconds: 180
+    allow_parallel: true
+
+  llama70:
+    role_id: llama_generalist
+    role: "Llama 3.3 70B — 多资产推理"
+    model: "openrouter/meta-llama/llama-3.3-70b-instruct:free"
+    command: "opencode run -m openrouter/meta-llama/llama-3.3-70b-instruct:free --auto"
+    enabled: true
+    timeout_seconds: 180
+    allow_parallel: true
+
+  nemotron120:
+    role_id: nemotron_super
+    role: "Nemotron Super 120B — 深度推理"
+    model: "openrouter/nvidia/nemotron-3-super-120b-a12b:free"
+    command: "opencode run -m openrouter/nvidia/nemotron-3-super-120b-a12b:free --auto"
+    enabled: true
+    timeout_seconds: 240
+    allow_parallel: true
+
+  nemotron550:
+    role_id: nemotron_ultra
+    role: "Nemotron Ultra 550B — 宏观叙事"
+    model: "openrouter/nvidia/nemotron-3-ultra-550b-a55b:free"
+    command: "opencode run -m openrouter/nvidia/nemotron-3-ultra-550b-a55b:free --auto"
+    enabled: true
+    timeout_seconds: 300
+    allow_parallel: true
+
+  gptoss20:
+    role_id: oss_reasoner
+    role: "GPT-OSS 20B — 结构化推理"
+    model: "openrouter/openai/gpt-oss-20b:free"
+    command: "opencode run -m openrouter/openai/gpt-oss-20b:free --auto"
+    enabled: true
+    timeout_seconds: 180
+    allow_parallel: true
+
+  laguna:
+    role_id: poolside_analyst
+    role: "Laguna M.1 — 另类视角"
+    model: "openrouter/poolside/laguna-m.1:free"
+    command: "opencode run -m openrouter/poolside/laguna-m.1:free --auto"
+    enabled: true
+    timeout_seconds: 180
+    allow_parallel: true
+
+  omni:
+    role_id: omni_reasoner
+    role: "Nemotron Omni — 多模态推理"
+    model: "openrouter/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
+    command: "opencode run -m openrouter/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free --auto"
     enabled: true
     timeout_seconds: 180
     allow_parallel: true
 
   summarizer:
     role: "Meeting Secretary"
-    model: "opencode/deepseek-v4-flash-free"
-    command: "opencode run -m opencode/deepseek-v4-flash-free --auto"
+    model: "openrouter/nvidia/nemotron-3-nano-30b-a3b:free"
+    command: "opencode run -m openrouter/nvidia/nemotron-3-nano-30b-a3b:free --auto"
     enabled: true
     timeout_seconds: 120
     allow_parallel: false
