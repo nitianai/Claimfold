@@ -265,7 +265,7 @@ max_parallel: 6
   grok        # 地缘政策（grok-4.3）
   mimo        # 个股挑战
   nemo        # 利率/外汇
-按需（勿同轮全加）: gptoss20（结构化）, north（大宗）
+按需（勿同轮全加）: codex（本地推理审计）, gptoss20（结构化）, north（大宗）
 ```
 
 **单场推荐流程：**

@@ -174,7 +174,7 @@ SECTION_ALIASES = {
 LEGACY_GUEST_MAP = {
     "claude": "qwen",
     "grok": "laguna",
-    "codex": "north",
+    "codex": "codex",
     "nemotron": "nemo",
 }
 

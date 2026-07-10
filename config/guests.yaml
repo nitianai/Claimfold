@@ -46,6 +46,17 @@ guests:
     timeout_seconds: 120
     allow_parallel: true
 
+  codex:
+    guest_type: llm
+    model_tier: local
+    role_id: logic_auditor
+    role: "Codex Local — 推理链审计与可证伪性检验（无头 exec）"
+    model: "codex/gpt-5.6-sol"
+    command: "bash scripts/run_codex_guest.sh"
+    enabled: true
+    timeout_seconds: 180
+    allow_parallel: true
+
   gptoss20:
     guest_type: llm
     model_tier: floor

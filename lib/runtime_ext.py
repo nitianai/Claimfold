@@ -14,7 +14,9 @@ from typing import Any, Callable
 GUEST_ALIASES = {
     "claude": "qwen",
     "grok": "laguna",
-    "codex": "north",
+    "codex": "codex",
+    "logic": "codex",
+    "auditor": "codex",
     "nemotron": "nemo",
     "macro": "qwen",
     "macro_strategist": "qwen",

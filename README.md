@@ -173,7 +173,7 @@ guests:
 - `timeout_seconds` — 单 Guest 超时（默认 180s）
 - `allow_parallel: false` — 该 Guest 降级为串行执行
 
-Guest 别名：`claude→qwen`, `grok→laguna`, `codex→north`, `nemotron→nemo`
+Guest 别名：`claude→qwen`, `grok→laguna`, `codex→codex`（本地无头）, `nemotron→nemo`
 
 ## P1：按需点名 selected_guests
 
