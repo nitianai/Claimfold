@@ -1,4 +1,4 @@
-# 主张生命周期（Claim Lifecycle）— 研究运行时（Research Runtime）V0.2 规范（已冻结 · 可生产）
+# 主张生命周期（Claim Lifecycle）— 研究运行时（Research Runtime）V0.2 规范（冻结草案）
 
 > **运行时座右铭（Runtime Motto）**
 >
@@ -247,19 +247,17 @@ V0.2 增加**跨会话可复用主张（cross-session reusable claims）**，且
 
 ## 6. V0.2 最小实现清单（Minimal Implementation Checklist）
 
-### 必须交付（Must ship）— ✅ 2026-07-10 已验收
+### 必须交付（Must ship）
 
-- [x] `claims.jsonl` 只追加 — `lib/claim_lifecycle.py` + `claims/claims.jsonl`
-- [x] `claims_index.json` 从账本重建 — `claim rebuild-index`
-- [x] `claim promote`（Owner 手动晋升）— `--from-state conflicts[N]` + scope + `--evidence`
-- [x] `claim retire`（Owner 手动退休）
-- [x] `claim rebuild-index`（重建索引）
-- [x] `claim list`（只读列表）
-- [x] 按 scope 的 Top-K 注入研究 Guest prompt — `{{prior_claims}}`
-- [x] Guest 输出解析为 `RESPOND` 事件（SUPPORT|CHALLENGE|RETIRE|DEFER）
-- [x] `claim verify`（三场会议验收 §7）
-- [x] promote 时的禁止晋升校验器（non-promotion validator）
-- [x] 注入禁用词检查（authority leakage）
+- [ ] `claims.jsonl` 只追加
+- [ ] `claims_index.json` 从账本重建
+- [ ] `claim promote`（Owner 手动晋升）
+- [ ] `claim retire`（Owner 手动退休）
+- [ ] `claim rebuild-index`（重建索引）
+- [ ] 按 scope 的 Top-K 注入研究 `context` / Guest prompt
+- [ ] Guest 输出解析为 `RESPOND` 事件（SUPPORT|CHALLENGE|RETIRE|DEFER）
+- [ ] `verify_claim_lifecycle`（主张生命周期验收）— 三场会议验收（§7）
+- [ ] promote 时的禁止晋升校验器（non-promotion validator）
 
 ### 明确推迟至 V0.3+
 
@@ -292,24 +290,11 @@ V0.2 增加**跨会话可复用主张（cross-session reusable claims）**，且
 
 **通过标准：** 各步可在 jsonl 中审计；索引可从零重建；禁止手改索引。
 
-**验收记录（2026-07-10）：**
-
-| 步骤 | 会议 / 主张 | 结果 |
-|------|-------------|------|
-| A promote | `meet-20260710-015200` → `clm-000003` | TENTATIVE |
-| B 注入 + CHALLENGE | `meet-20260710-015733`，qwen 真实 raw | CONTESTED |
-| C retire | `claim retire clm-000003` | RETIRED |
-| verify | `./council.sh claim verify` | ✓ 通过 |
-
-复现：`docs/EXPERIMENTS.md` §3。
-
 ---
 
-## 8. 指标（Metrics）— 实验报告扩展（推迟 V0.3）
+## 8. 指标（Metrics）— 实验报告（Experiment Report）扩展
 
-> V0.2 可生产使用**不依赖**本节指标；以下为 V0.3 实验报告增强项。
-
-不追踪 `claim_count`（主张数量）。V0.3 应追踪：
+不追踪 `claim_count`（主张数量）。应追踪：
 
 - `inject_to_respond_ratio`（注入回应比）— 被注入且收到实质 RESPOND 的主张占比
 - `contested_unresolved_days`（争议未解决天数）— CONTESTED 后无后续跟进
@@ -341,34 +326,9 @@ V0.2 增加**跨会话可复用主张（cross-session reusable claims）**，且
 
 | 项目 | 状态 |
 |------|------|
-| 语义闭环（Semantic Loop） | ✅ 已交付（Research `run-parallel`） |
-| 主张生命周期 V0.2（Claim Lifecycle） | ✅ **可生产使用** — §6 全部交付，§7 已验收 |
-| Claim 指标 §8 | ⏳ 推迟至 V0.3 |
-| 模块 | `lib/claim_lifecycle.py` + `engine.py` `claim` 子命令 |
-
-### 生产用法速查
-
-```bash
-# 1. 研究会议产生 conflicts + evidence raw
-./council.sh start "议题" --mode research
-./council.sh context "范围"
-./council.sh run-parallel   # ≥2 轮推荐
-
-# 2. Owner 晋升（须带 scope + evidence）
-./council.sh claim promote --from-state conflicts[0] \
-  --domain finance --subjects gold,USD --regime-tags risk-off \
-  --valid-from 2026-07-10 --valid-until 2026-07-17 \
-  --evidence raw/round-002-qwen.md
-
-# 3. 新会议：prior_claims 自动注入；Guest 须写 claim_responses
-./council.sh start "复核议题" --mode research
-./council.sh run-parallel
-
-# 4. 退休 / 审计
-./council.sh claim list
-./council.sh claim retire clm-000001 --reason "owner decision"
-./council.sh claim verify
-```
+| 语义闭环（Semantic Loop） | 已交付（研究路径 Research path） |
+| 主张生命周期 V0.2（Claim Lifecycle V0.2） | **设计已冻结 — 实现门槛为 §7 验收规范** |
+| Codex 实现 | **未开始** — 待 Owner 审阅本文档后 |
 
 ---
 
