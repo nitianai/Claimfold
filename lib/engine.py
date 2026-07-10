@@ -55,13 +55,13 @@ from runtime_ext import (
 ROOT = Path(__file__).resolve().parent.parent
 CURRENT_MEETING_FILE = ROOT / ".current_meeting"
 CONFIG_FILE = ROOT / "config" / "guests.yaml"
-GUEST_TEMPLATE = ROOT / "prompts" / "guest_prompt_template.md"
-GUEST_JSON_TEMPLATE = ROOT / "prompts" / "guest_prompt_json.md"
-GUEST_RESEARCH_TEMPLATE = ROOT / "prompts" / "guest_prompt_research.md"
-INVESTMENT_GUEST_TEMPLATE = ROOT / "prompts" / "guest_prompt_investment.md"
-SUMMARIZER_TEMPLATE = ROOT / "prompts" / "summarizer_prompt_template.md"
-MARKET_CONTEXT_PROMPT = ROOT / "prompts" / "market_context_prompt.md"
-INVESTMENT_REPORT_PROMPT = ROOT / "prompts" / "investment_report_prompt.md"
+GUEST_TEMPLATE = ROOT / "prompts" / "guest" / "template.md"
+GUEST_JSON_TEMPLATE = ROOT / "prompts" / "guest" / "json.md"
+GUEST_RESEARCH_TEMPLATE = ROOT / "prompts" / "guest" / "research.md"
+INVESTMENT_GUEST_TEMPLATE = ROOT / "prompts" / "guest" / "investment.md"
+SUMMARIZER_TEMPLATE = ROOT / "prompts" / "system" / "summarizer.md"
+MARKET_CONTEXT_PROMPT = ROOT / "prompts" / "system" / "market_context.md"
+INVESTMENT_REPORT_PROMPT = ROOT / "prompts" / "reports" / "investment_report.md"
 MEETINGS_DIR = ROOT / "meetings"
 
 INVESTMENT_AGENDA: list[dict[str, str]] = [
@@ -1250,6 +1250,12 @@ def cmd_init(_: argparse.Namespace) -> None:
     dirs = [
         ROOT / "config",
         ROOT / "prompts",
+        ROOT / "prompts" / "guest",
+        ROOT / "prompts" / "system",
+        ROOT / "prompts" / "reports",
+        ROOT / "docs",
+        ROOT / "docs" / "archive",
+        ROOT / "scripts",
         ROOT / "meetings",
         ROOT / "lib",
     ]

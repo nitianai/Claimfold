@@ -20,15 +20,7 @@
 复现质量对比：
 
 ```bash
-python3 - <<'PY'
-import sys; sys.path.insert(0, "lib")
-from meeting_quality import compare_reports
-from pathlib import Path
-print(compare_reports(
-    Path("meetings/meet-20260710-021348"),
-    Path("meetings/meet-20260710-021510"),
-))
-PY
+python3 scripts/compare_meetings.py meet-20260710-021348 meet-20260710-021510
 ```
 
 ---
@@ -107,7 +99,7 @@ PY
 - 主张晋升应选**可证伪命题**，非整份会议结论。
 - `claims.jsonl` 只追加；`claims_index.json` 可重建。
 
-详见 `CLAIM_LIFECYCLE.md`。
+详见 [`CLAIM_LIFECYCLE.md`](CLAIM_LIFECYCLE.md)。
 
 ---
 
