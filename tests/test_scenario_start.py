@@ -70,6 +70,26 @@ def test_resolve_bindings_path_default_config():
     assert path.is_file()
 
 
+def test_compile_includes_scenario_termination():
+    plan = build_meeting_plan(
+        scenario="project-development",
+        meeting_id="meet-test-term",
+        topic="termination",
+        generated_at="2026-07-10T12:00:00Z",
+        bindings_path=FIXTURE_BINDINGS,
+    )
+    assert plan["termination"]["max_rounds"] == 10
+    assert plan["termination"]["pause_every_rounds"] == 3
+
+
+def test_serial_roster_excludes_script_guests():
+    from council.guests import guest_roster, load_guests
+
+    guests = load_guests()
+    assert "tsla_feed" in guest_roster(guests)
+    assert "tsla_feed" not in guest_roster(guests, serial=True)
+
+
 def test_build_meeting_plan_with_cli_bind_override():
     plan = build_meeting_plan(
         scenario="project-development",
@@ -180,6 +200,10 @@ def test_scenario_start_writes_meeting_plan_json():
             assert state["scenario_id"] == "project_development"
             assert state["meeting_plan_file"] == MEETING_PLAN_FILENAME
             assert state["participant_ids"]
+            assert state["max_rounds"] == 10
+            assert state["max_round_before_owner"] == 3
+            assert state["plan_actor_queue"]
+            assert state["next_speaker"] == state["plan_actor_queue"][0]
         finally:
             (
                 cfg.ROOT,

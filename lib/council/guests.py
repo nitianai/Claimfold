@@ -49,13 +49,18 @@ def resolve_executor_to_guest(executor_id: str, roster: list[str]) -> str:
     )
 
 
-def guest_roster(guests: dict[str, Any]) -> list[str]:
+def guest_roster(guests: dict[str, Any], *, serial: bool = False) -> list[str]:
     skip = {"summarizer", "reporter"}
-    return [
-        name
-        for name, cfg in guests.items()
-        if name not in skip and not cfg.get("reporter") and not cfg.get("summarizer") and cfg.get("enabled", True)
-    ]
+    roster: list[str] = []
+    for name, cfg in guests.items():
+        if name in skip or cfg.get("reporter") or cfg.get("summarizer"):
+            continue
+        if not cfg.get("enabled", True):
+            continue
+        if serial and is_script_guest(cfg):
+            continue
+        roster.append(name)
+    return roster
 
 
 def is_json_mode(state: dict[str, Any]) -> bool:

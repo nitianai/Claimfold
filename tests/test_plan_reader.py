@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import tempfile
 from pathlib import Path
+from types import MappingProxyType
 
 import council.plan as plan_pkg
 from council.plan import atomic_write_plan, load_meeting_plan
@@ -23,7 +24,7 @@ def test_meeting_plan_snapshot_is_typed_read_only_view():
         path = Path(tmp) / "meeting_plan.json"
         atomic_write_plan(path, compile_project_plan())
         snapshot = load_meeting_plan(path)
-        assert isinstance(snapshot, dict)
+        assert isinstance(snapshot, (dict, MappingProxyType))
         assert snapshot["schema_version"] == "1.0"
         for forbidden_export in ("RuntimePlan", "PlanManager", "PlanStore", "PlanService"):
             assert forbidden_export not in plan_pkg.__all__
@@ -87,6 +88,18 @@ def test_write_uses_exclusive_create():
         assert len(errors) == 1
         assert "overwrite" in str(errors[0])
         assert target.is_file()
+
+
+def test_load_meeting_plan_returns_immutable_snapshot():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "meeting_plan.json"
+        atomic_write_plan(path, compile_project_plan())
+        snapshot = load_meeting_plan(path)
+        try:
+            snapshot["topic"] = "mutated"  # type: ignore[index]
+            raise AssertionError("expected immutability failure")
+        except TypeError:
+            pass
 
 
 def test_unknown_version_on_read_fail_closed():

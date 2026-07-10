@@ -20,6 +20,16 @@ def test_schema_file_exists():
     assert doc["properties"]["schema_version"]["enum"] == [CURRENT_SCHEMA_VERSION]
 
 
+def test_malformed_plan_raises_validation_error_not_keyerror():
+    try:
+        validate_plan({"schema_version": "1.0"})
+        raise AssertionError("expected failure")
+    except PlanValidationError:
+        pass
+    except KeyError as exc:
+        raise AssertionError(f"KeyError instead of PlanValidationError: {exc}") from exc
+
+
 def test_missing_schema_version_fails():
     plan = compile_project_plan()
     del plan["schema_version"]

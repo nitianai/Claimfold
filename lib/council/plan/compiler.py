@@ -195,6 +195,7 @@ def compile_meeting_plan(
         "participants": participants,
         "stages": stages,
         "decision_policy": deepcopy(scenario.get("decision_policy") or {}),
+        "termination": deepcopy(scenario.get("termination") or {}),
         "provenance": {
             "bindings_sha256": _sha256_hex(bindings_canonical),
             "bindings_source": bindings_source,

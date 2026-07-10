@@ -289,5 +289,9 @@
       "stage_id": "delivery"
     }
   ],
+  "termination": {
+    "max_rounds": 10,
+    "pause_every_rounds": 3
+  },
   "topic": "Owner Dashboard 开发"
 }

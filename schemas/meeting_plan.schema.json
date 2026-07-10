@@ -43,6 +43,7 @@
       "type": "object",
       "additionalProperties": true
     },
+    "termination": { "$ref": "#/$defs/termination" },
     "provenance": { "$ref": "#/$defs/provenance" }
   },
   "$defs": {
@@ -125,6 +126,14 @@
           "items": { "type": "string", "minLength": 1 }
         },
         "owner_gate": { "type": "boolean" }
+      }
+    },
+    "termination": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_rounds": { "type": "integer", "minimum": 1 },
+        "pause_every_rounds": { "type": "integer", "minimum": 1 }
       }
     },
     "provenance": {

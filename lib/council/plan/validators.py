@@ -235,12 +235,12 @@ def validate_semantics(plan: dict[str, Any]) -> None:
 
 
 def validate_plan(plan: dict[str, Any]) -> None:
-    """Full validation: semantics then JSON Schema (both must pass)."""
+    """Full validation: JSON Schema shape first, then semantics."""
     if not isinstance(plan, dict):
         raise PlanValidationError("plan must be a mapping")
     validate_schema_version(plan.get("schema_version"))
-    validate_semantics(plan)
     validate_json_schema(plan)
+    validate_semantics(plan)
 
 
 def schema_document_path() -> Path:

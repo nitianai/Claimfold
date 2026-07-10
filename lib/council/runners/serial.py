@@ -16,6 +16,7 @@ from council.guests import (
     is_json_mode,
     load_guests,
 )
+from council.plan.runtime import advance_plan_speaker, load_state_plan, plan_guest_roster
 from council.mock import generate_mock_guest_json
 from council.parsers import (
     apply_parsed_summary,
@@ -47,7 +48,11 @@ def run_one_round(meeting_dir: Path, *, quiet: bool = False) -> str | None:
     """Run one guest turn. Returns auto-stop reason if meeting should end."""
     state = load_state(meeting_dir)
     guests = load_guests()
-    roster = guest_roster(guests)
+    plan = load_state_plan(meeting_dir, state)
+    if plan is not None:
+        roster = plan_guest_roster(plan, guests)
+    else:
+        roster = guest_roster(guests, serial=True)
 
     if state.get("status") == "stopped":
         raise SystemExit("Meeting already stopped. Use ./council.sh start to begin a new one.")
@@ -208,7 +213,10 @@ def run_one_round(meeting_dir: Path, *, quiet: bool = False) -> str | None:
     state["rounds_since_owner"] = state.get("rounds_since_owner", 0) + 1
     state["history"].append(history_entry)
 
-    state["next_speaker"] = rotate_guest(guest_name, roster)
+    if plan is not None:
+        advance_plan_speaker(state)
+    else:
+        state["next_speaker"] = rotate_guest(guest_name, roster)
     if is_investment_mode(state):
         state["next_question"] = resolve_round_question(state, round_num + 1, state["next_speaker"])
     elif not json_mode and parsed.get("suggested_next_question"):

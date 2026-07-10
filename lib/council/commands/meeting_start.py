@@ -21,6 +21,7 @@ from council.plan import (
     first_stage_binding,
     parse_cli_bindings,
 )
+from council.plan.runtime import build_plan_actor_queue
 from council.state_store import save_state
 
 
@@ -63,6 +64,8 @@ def _scenario_start_state(
         "participant_ids": participant_ids,
         "next_role_id": first_role_id,
         "next_executor_id": first_executor_id,
+        "plan_actor_queue": build_plan_actor_queue(plan, roster),
+        "plan_actor_index": 0,
         "round": 0,
         "status": "running",
         "owner_required": False,
@@ -169,15 +172,10 @@ def cmd_start(args: argparse.Namespace) -> None:
     if owner_pause < 1:
         raise SystemExit("--rounds-before-owner must be >= 1")
 
-    if args.max_rounds is not None:
-        max_rounds = args.max_rounds
-    elif meeting_mode == "investment":
-        max_rounds = 100
-    else:
-        max_rounds = 12
-
     stale_limit = getattr(args, "stale_limit", 5)
     scenario = getattr(args, "scenario", None)
+    plan: dict[str, Any] | None = None
+    termination: dict[str, Any] = {}
 
     if scenario:
         guests = load_guests()
@@ -200,6 +198,22 @@ def cmd_start(args: argparse.Namespace) -> None:
             )
         except PlanValidationError as exc:
             raise SystemExit(str(exc)) from exc
+        termination = plan.get("termination") or {}
+
+    if args.max_rounds is not None:
+        max_rounds = args.max_rounds
+    elif meeting_mode == "investment":
+        max_rounds = 100
+    elif termination.get("max_rounds"):
+        max_rounds = int(termination["max_rounds"])
+    else:
+        max_rounds = 12
+
+    if scenario and owner_pause == 3 and termination.get("pause_every_rounds"):
+        owner_pause = int(termination["pause_every_rounds"])
+
+    if scenario:
+        assert plan is not None
         plan_path = meeting_dir / MEETING_PLAN_FILENAME
         atomic_write_plan(plan_path, plan)
         state = _scenario_start_state(

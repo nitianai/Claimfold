@@ -55,12 +55,12 @@ def test_duplicate_participant_id_fails():
 def test_bearer_token_in_snapshot_value_fails():
     plan = compile_project_plan()
     plan = copy.deepcopy(plan)
-    plan["participants"][0]["executor_snapshot"]["note"] = "Bearer abc.def.ghi"
+    plan["participants"][0]["executor_snapshot"]["adapter"] = "Bearer abc.def.ghi"
     try:
         validate_plan(plan)
         raise AssertionError("expected failure")
     except PlanValidationError as exc:
-        assert "disallowed" in str(exc).lower() or "secret" in str(exc).lower()
+        assert "secret" in str(exc).lower()
 
 
 def test_access_token_key_rejected():
@@ -71,7 +71,13 @@ def test_access_token_key_rejected():
         validate_plan(plan)
         raise AssertionError("expected failure")
     except PlanValidationError as exc:
-        assert "disallowed" in str(exc).lower() or "forbidden" in str(exc).lower()
+        msg = str(exc).lower()
+        assert (
+            "disallowed" in msg
+            or "forbidden" in msg
+            or "additional properties" in msg
+            or "not allowed" in msg
+        )
 
 
 def test_command_template_literal_secret_rejected():
