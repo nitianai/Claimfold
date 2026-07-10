@@ -73,12 +73,38 @@ COUNCIL_MOCK=1 ./council.sh run-parallel
 | `audit-summary <round> <guest>` | 审计 prompt / raw / summary.md / summary.json |
 | `repair-state` | 迁移旧 guest 名并从 summary 重建 state |
 | `tui` | （可选）tmux 三栏视图 |
+| `claim promote` | Owner 将 state 条目晋升为主张（写入 `claims/claims.jsonl`） |
+| `claim retire <id>` | Owner 退休主张 |
+| `claim list` | 列出 `claims_index.json` 投影 |
+| `claim rebuild-index` | 从账本重建索引 |
+| `claim verify` | 三场会议主张生命周期验收 |
 
 ### start 参数
 
 - `-r N` — 每 N **轮**暂停等待 Owner（默认 3）
 - `--max-rounds N` — 最大轮次（standard/research 默认 12，investment 默认 100）
 - `--mode research` — 启用并行 Research Runtime
+
+## Claim Lifecycle V0.2（跨会话试探性主张）
+
+```bash
+# 会议 A：从分歧晋升
+./council.sh claim promote --from-state conflicts[0] \
+  --domain finance --subjects gold,USD --regime-tags risk-off \
+  --valid-from 2026-07-10 --valid-until 2026-08-01 \
+  --evidence raw/round-001-hy3.md
+
+# 会议 B：研究 prompt 自动注入 prior_claims；Guest raw 解析为 RESPOND
+./council.sh start "黄金一周走势" --mode research
+./council.sh context "黄金、美元"
+COUNCIL_MOCK=1 ./council.sh run-parallel
+
+# 会议 C：退休
+./council.sh claim retire clm-000001
+./council.sh claim verify
+```
+
+账本：`claims/claims.jsonl`（只追加）→ `claims/claims_index.json`（可重建投影）。详见 `CLAIM_LIFECYCLE.md`。
 
 ## 目录结构
 
@@ -87,6 +113,9 @@ council/
   council.sh
   lib/engine.py
   lib/runtime_ext.py
+  lib/claim_lifecycle.py
+  claims/claims.jsonl
+  claims/claims_index.json
   config/guests.yaml
   prompts/
     guest_prompt_research.md

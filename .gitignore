@@ -10,6 +10,7 @@ venv/
 
 # Meeting artifacts (regenerable; keep repo lean)
 meetings/
+claims/
 
 # Optional local reports (regenerable)
 报告_*.md

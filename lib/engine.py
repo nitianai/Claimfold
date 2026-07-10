@@ -19,6 +19,21 @@ from typing import Any
 
 import yaml
 
+from claim_lifecycle import (
+    append_event,
+    compute_fingerprint,
+    ensure_claims_dir,
+    format_prior_claims_for_prompt,
+    load_index,
+    next_claim_id,
+    parse_claim_responses_from_raw,
+    rebuild_index,
+    select_claims_for_injection,
+    validate_injection_text,
+    validate_promotion_candidate,
+    validate_scope,
+    verify_three_meeting_chain,
+)
 from runtime_ext import (
     apply_summary_json_to_state,
     artifact_paths_research,
@@ -454,7 +469,12 @@ def generate_mock_guest_json(*, guest: str, role_id: str, round_num: int, focus:
 
 
 def generate_mock_research_output(
-    *, guest: str, round_num: int, label: str, state: dict[str, Any]
+    *,
+    guest: str,
+    round_num: int,
+    label: str,
+    state: dict[str, Any],
+    injected_claims: list[dict[str, Any]] | None = None,
 ) -> str:
     """Mock guest output that satisfies semantic loop obligations when prior state exists."""
     conflicts = state.get("conflicts", [])
@@ -484,12 +504,20 @@ def generate_mock_research_output(
         )
 
     body = "\n\n".join(response_lines)
+    claim_block = ""
+    if injected_claims:
+        target = injected_claims[0]
+        cid = target.get("claim_id", "clm-000001")
+        claim_block = f"""
+claim_responses:
+- claim_id: {cid} | response: CHALLENGE | statement: [MOCK/{label}] {guest} 指出美元走强阶段该命题适用边界过宽
+"""
     return f"""{body}
 
 证据：
 - 模拟证据 A（可审计测试数据）
 - 模拟证据 B
-
+{claim_block}
 风险：
 - 模拟风险：命令不可用，当前为 mock 模式
 
@@ -1032,10 +1060,18 @@ def generate_mock_market_context(*, scope: str, topic: str, label: str) -> str:
     return "\n".join(lines)
 
 
-def build_research_semantic_obligations(state: dict[str, Any]) -> str:
+def build_research_semantic_obligations(
+    state: dict[str, Any], *, prior_claims: list[dict[str, Any]] | None = None
+) -> str:
     lines = [
         "5. 你必须至少回应以下三类之一：支持或修正一个 confirmed_point；回应或挑战一个 conflict；回答或细化一个 open_question。"
     ]
+    if prior_claims:
+        first = prior_claims[0]
+        lines.append(
+            f"5b. **历史试探性主张（必填）**：对「历史试探性主张」中至少一条写入 claim_responses。"
+            f" 优先：{first.get('claim_id', '')} ({first.get('status', 'TENTATIVE')})"
+        )
     conflicts = state.get("conflicts", [])
     open_questions = state.get("open_questions", [])
     if conflicts:
@@ -1055,10 +1091,16 @@ def build_research_prompt_context(
     state: dict[str, Any], guests: dict[str, Any], guest_name: str, meeting_dir: Path
 ) -> dict[str, str]:
     question = state.get("next_question") or state.get("current_focus") or state.get("topic", "")
+    prior = select_claims_for_injection(state, ROOT)
+    prior_text = format_prior_claims_for_prompt(prior)
+    inject_errors = validate_injection_text(prior_text)
+    if inject_errors:
+        raise ValueError("prior_claims 注入校验失败: " + "; ".join(inject_errors))
     return {
         "topic": state.get("topic", ""),
         "next_question": question,
         "market_context": read_market_context(meeting_dir),
+        "prior_claims": prior_text,
         "guest_role": guests.get(guest_name, {}).get("role", guest_name),
         "guest_id": guest_name,
         "role_id": guest_role_id(guests, guest_name),
@@ -1067,7 +1109,7 @@ def build_research_prompt_context(
         "open_questions": format_list(state.get("open_questions", [])),
         "owner_views": format_list(state.get("owner_views", []), empty="(无)"),
         "guest_summaries": format_guest_summaries(state.get("guest_summaries", {})),
-        "semantic_obligations": build_research_semantic_obligations(state),
+        "semantic_obligations": build_research_semantic_obligations(state, prior_claims=prior),
     }
 
 
@@ -1113,6 +1155,7 @@ def process_parallel_guest(
         for p in paths.values():
             ensure_no_overwrite(p)
 
+        injected_claims = select_claims_for_injection(state, ROOT)
         prompt = generate_research_prompt(state, guests, guest_name, meeting_dir)
         paths["prompt"].write_text(prompt, encoding="utf-8")
 
@@ -1127,9 +1170,28 @@ def process_parallel_guest(
         )
         if raw_mock:
             raw_output = generate_mock_research_output(
-                guest=guest_name, round_num=round_num, label="mock", state=state
+                guest=guest_name,
+                round_num=round_num,
+                label="mock",
+                state=state,
+                injected_claims=injected_claims,
             )
         paths["raw"].write_text(raw_output.strip() + "\n", encoding="utf-8")
+
+        respond_events = []
+        if injected_claims:
+            primary_cid = injected_claims[0].get("claim_id", "")
+            respond_events = parse_claim_responses_from_raw(
+                raw_output,
+                claim_id=primary_cid,
+                guest=guest_name,
+                meeting_id=state["meeting_id"],
+                meeting_dir=meeting_dir,
+            )
+            for ev in respond_events:
+                append_event(ROOT, ev)
+            if respond_events:
+                rebuild_index(ROOT)
 
         summarizer_cfg = guests.get("summarizer", {})
         sum_timeout = int(summarizer_cfg.get("timeout_seconds", 120))
@@ -1164,6 +1226,7 @@ def process_parallel_guest(
             "duration_s": duration,
             "used_mock_guest": raw_mock,
             "used_mock_summarizer": sum_mock,
+            "claim_responds": len(respond_events),
             "prompt_path": str(paths["prompt"].relative_to(meeting_dir)),
             "raw_output_path": str(paths["raw"].relative_to(meeting_dir)),
             "summary_md_path": str(paths["summary_md"].relative_to(meeting_dir)),
@@ -1192,6 +1255,7 @@ def cmd_init(_: argparse.Namespace) -> None:
     ]
     for d in dirs:
         d.mkdir(parents=True, exist_ok=True)
+    ensure_claims_dir(ROOT)
 
     defaults = {
         CONFIG_FILE: """guests:
@@ -2250,6 +2314,160 @@ def cmd_audit_summary(args: argparse.Namespace) -> None:
                 print("... (truncated)")
 
 
+def parse_from_state_ref(ref: str) -> tuple[str, int]:
+    m = re.match(r"^(confirmed_points|conflicts|open_questions)\[(\d+)\]$", ref.strip())
+    if not m:
+        raise SystemExit(f"Invalid --from-state: {ref} (expected e.g. conflicts[0])")
+    return m.group(1), int(m.group(2))
+
+
+def resolve_meeting_dir(meeting_id: str | None) -> Path:
+    if meeting_id:
+        meeting_dir = MEETINGS_DIR / meeting_id.strip()
+        if not meeting_dir.exists():
+            raise SystemExit(f"Meeting not found: {meeting_dir}")
+        return meeting_dir
+    return get_current_meeting_dir()
+
+
+def build_scope_from_args(args: argparse.Namespace) -> dict[str, Any]:
+    subjects = [s.strip() for s in (args.subjects or "").split(",") if s.strip()]
+    regime_tags = [s.strip() for s in (args.regime_tags or "").split(",") if s.strip()]
+    conditions = [s.strip() for s in (args.conditions or "").split(";") if s.strip()]
+    return {
+        "domain": (args.domain or "").strip(),
+        "subjects": subjects,
+        "regime_tags": regime_tags,
+        "valid_from": (args.valid_from or "").strip(),
+        "valid_until": (args.valid_until or "").strip(),
+        "conditions": conditions,
+        "exclusions": [],
+    }
+
+
+def cmd_claim_promote(args: argparse.Namespace) -> None:
+    field, index = parse_from_state_ref(args.from_state)
+    meeting_dir = resolve_meeting_dir(args.meeting)
+    state = load_state(meeting_dir)
+    scope = build_scope_from_args(args)
+
+    scope_errors = validate_scope(scope)
+    if scope_errors:
+        raise SystemExit("scope 校验失败:\n  - " + "\n  - ".join(scope_errors))
+
+    items = state.get(field, [])
+    if index >= len(items):
+        raise SystemExit(f"{field}[{index}] 不存在（共 {len(items)} 条）")
+    statement = str(items[index]).strip()
+
+    evidence_refs = [e.strip() for e in (args.evidence or []) if e.strip()]
+    promo_errors = validate_promotion_candidate(
+        statement=statement,
+        evidence_refs=evidence_refs,
+        meeting_dir=meeting_dir,
+        state=state,
+        field=field,
+        index=index,
+    )
+    if promo_errors and not args.owner_override:
+        raise SystemExit("晋升拒绝:\n  - " + "\n  - ".join(promo_errors))
+
+    claim_id = next_claim_id(ROOT)
+    fingerprint = compute_fingerprint(statement, scope)
+    event: dict[str, Any] = {
+        "event": "PROMOTE",
+        "claim_id": claim_id,
+        "fingerprint": fingerprint,
+        "statement": statement,
+        "scope": scope,
+        "epistemic_status": "TENTATIVE",
+        "evidence_refs": evidence_refs,
+        "derived_from_meeting": meeting_dir.name,
+        "derived_from_state_ref": f"{field}[{index}]",
+        "promoted_by": "owner_override" if args.owner_override else "owner",
+        "ts": utc_now(),
+    }
+    if args.owner_override and promo_errors:
+        event["override_note"] = "; ".join(promo_errors)
+
+    append_event(ROOT, event)
+    index_data = rebuild_index(ROOT)
+    print(f"Promoted {claim_id} → TENTATIVE")
+    print(f"Statement: {statement[:120]}{'...' if len(statement) > 120 else ''}")
+    print(f"Ledger: {ROOT / 'claims' / 'claims.jsonl'}")
+    print(f"Index claims: {index_data.get('claim_count', 0)}")
+
+
+def cmd_claim_retire(args: argparse.Namespace) -> None:
+    claim_id = args.claim_id.strip()
+    if not re.match(r"^clm-\d+$", claim_id):
+        raise SystemExit(f"Invalid claim_id: {claim_id}")
+
+    index = load_index(ROOT)
+    if claim_id not in index.get("claims", {}):
+        raise SystemExit(f"Unknown claim: {claim_id}")
+
+    event = {
+        "event": "RETIRE",
+        "claim_id": claim_id,
+        "reason": (args.reason or "owner decision").strip(),
+        "actor": "owner",
+        "ts": utc_now(),
+    }
+    append_event(ROOT, event)
+    index_data = rebuild_index(ROOT)
+    view = index_data.get("claims", {}).get(claim_id, {})
+    print(f"Retired {claim_id} → {view.get('status', 'RETIRED')}")
+    print(f"Reason: {event['reason']}")
+
+
+def cmd_claim_rebuild_index(_: argparse.Namespace) -> None:
+    index_data = rebuild_index(ROOT)
+    print(f"Rebuilt claims_index.json — {index_data.get('claim_count', 0)} claims")
+    print(f"Path: {ROOT / 'claims' / 'claims_index.json'}")
+
+
+def cmd_claim_list(_: argparse.Namespace) -> None:
+    index = load_index(ROOT)
+    claims = index.get("claims", {})
+    if not claims:
+        print("(无主张)")
+        return
+    for cid in sorted(claims.keys()):
+        view = claims[cid]
+        stmt = view.get("statement", "")
+        short = stmt[:80] + ("..." if len(stmt) > 80 else "")
+        print(f"{cid} [{view.get('status', '?')}] {short}")
+
+
+def cmd_claim_verify(_: argparse.Namespace) -> None:
+    ok, errors = verify_three_meeting_chain(ROOT)
+    if ok:
+        print("✓ Claim Lifecycle V0.2 验收通过")
+        index = load_index(ROOT)
+        for cid, view in sorted(index.get("claims", {}).items()):
+            print(f"  {cid}: {view.get('status')} (support={view.get('support_count', 0)})")
+        return
+    print("✗ Claim Lifecycle 验收失败:")
+    for err in errors:
+        print(f"  - {err}")
+    raise SystemExit(1)
+
+
+def cmd_claim(args: argparse.Namespace) -> None:
+    handlers = {
+        "promote": cmd_claim_promote,
+        "retire": cmd_claim_retire,
+        "rebuild-index": cmd_claim_rebuild_index,
+        "list": cmd_claim_list,
+        "verify": cmd_claim_verify,
+    }
+    handler = handlers.get(args.claim_cmd)
+    if not handler:
+        raise SystemExit(f"Unknown claim subcommand: {args.claim_cmd}")
+    handler(args)
+
+
 def cmd_tui(_: argparse.Namespace) -> None:
     if not shutil.which("tmux"):
         raise SystemExit("tmux not found. Install tmux or use CLI commands directly.")
@@ -2357,6 +2575,42 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("repair-state", help="Migrate legacy guest names and rebuild state from summaries")
     sub.add_parser("tui", help="Optional tmux-based TUI")
 
+    p_claim = sub.add_parser("claim", help="Claim Lifecycle V0.2 — ledger + index")
+    claim_sub = p_claim.add_subparsers(dest="claim_cmd", required=True)
+
+    p_promote = claim_sub.add_parser("promote", help="Owner promote state item to TENTATIVE claim")
+    p_promote.add_argument(
+        "--from-state",
+        required=True,
+        help="State ref e.g. conflicts[0] or confirmed_points[2]",
+    )
+    p_promote.add_argument("--meeting", help="Source meeting id (default: current)")
+    p_promote.add_argument("--domain", required=True, help="scope.domain e.g. finance")
+    p_promote.add_argument("--subjects", required=True, help="Comma-separated scope.subjects")
+    p_promote.add_argument("--regime-tags", default="", help="Comma-separated regime_tags")
+    p_promote.add_argument("--valid-from", default="", help="scope.valid_from YYYY-MM-DD")
+    p_promote.add_argument("--valid-until", default="", help="scope.valid_until YYYY-MM-DD")
+    p_promote.add_argument("--conditions", default="", help="Semicolon-separated scope.conditions")
+    p_promote.add_argument(
+        "--evidence",
+        action="append",
+        required=True,
+        help="Evidence path relative to meeting (repeatable)",
+    )
+    p_promote.add_argument(
+        "--owner-override",
+        action="store_true",
+        help="Bypass non-promotion validator with audit note",
+    )
+
+    p_retire = claim_sub.add_parser("retire", help="Owner retire a claim")
+    p_retire.add_argument("claim_id", help="e.g. clm-000001")
+    p_retire.add_argument("--reason", default="owner decision")
+
+    claim_sub.add_parser("rebuild-index", help="Rebuild claims_index.json from ledger")
+    claim_sub.add_parser("list", help="List claims from index")
+    claim_sub.add_parser("verify", help="Verify three-meeting claim lifecycle chain")
+
     return parser
 
 
@@ -2384,6 +2638,7 @@ def main() -> None:
         "audit-summary": cmd_audit_summary,
         "repair-state": cmd_repair_state,
         "tui": cmd_tui,
+        "claim": cmd_claim,
     }
     handlers[args.command](args)
 
