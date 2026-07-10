@@ -15,6 +15,9 @@ claims/
 # Optional local reports (regenerable)
 报告_*.md
 
+# Local agent / IDE permissions
+.qoder/
+
 # Editor / OS
 .DS_Store
 *.swp

@@ -21,8 +21,7 @@ printf '%s' "$PROMPT" | codex exec \
   - 2>/dev/null
 
 if [[ -s "$OUT" ]]; then
-  # Codex may repeat the final block; emit once.
-  awk 'BEGIN{n=0} /^判断：/{n++; if(n>1) exit} {print}' "$OUT"
+  python3 "$(dirname "$0")/dedupe_guest_output.py" < "$OUT"
   exit 0
 fi
 

@@ -1,0 +1,293 @@
+{
+  "decision_policy": {
+    "council_can_decide": false,
+    "council_can_recommend": true,
+    "owner_approval_required": true
+  },
+  "meeting_id": "meet-20260710-120000",
+  "participants": [
+    {
+      "executor_id": "qwen_local",
+      "executor_snapshot": {
+        "adapter": "opencode",
+        "capabilities": [
+          "reasoning",
+          "summarization"
+        ],
+        "command_template": [
+          "opencode",
+          "run",
+          "-m",
+          "{model}",
+          "--auto"
+        ],
+        "enabled": true,
+        "executor_id": "qwen_local",
+        "model": "gpu-llama/qwen3.6-35b",
+        "timeout_seconds": 180,
+        "type": "cli"
+      },
+      "participant_id": "moderator-01",
+      "role_id": "moderator",
+      "role_snapshot": {
+        "authority": {
+          "can_decide": false,
+          "can_execute": false,
+          "can_recommend": true
+        },
+        "name": "Moderator",
+        "purpose": "引导会议流程，确保各方按阶段发言，不代替 Owner 决策。",
+        "role_id": "moderator"
+      }
+    },
+    {
+      "executor_id": "claude",
+      "executor_snapshot": {
+        "adapter": "opencode",
+        "capabilities": [
+          "reasoning",
+          "architecture",
+          "long_context"
+        ],
+        "command_template": [
+          "opencode",
+          "run",
+          "-m",
+          "{model}",
+          "--auto"
+        ],
+        "enabled": true,
+        "executor_id": "claude",
+        "model": "anthropic/claude-sonnet-4-6",
+        "secret_refs": [
+          "ANTHROPIC_API_KEY"
+        ],
+        "timeout_seconds": 300,
+        "type": "cli"
+      },
+      "participant_id": "architect-01",
+      "role_id": "architect",
+      "role_snapshot": {
+        "authority": {
+          "can_decide": false,
+          "can_execute": false,
+          "can_recommend": true
+        },
+        "name": "Architect",
+        "purpose": "提出架构方案、模块边界与技术选型建议。",
+        "role_id": "architect"
+      }
+    },
+    {
+      "executor_id": "codex",
+      "executor_snapshot": {
+        "adapter": "bash",
+        "capabilities": [
+          "coding",
+          "repository_access",
+          "testing"
+        ],
+        "command_template": [
+          "bash",
+          "scripts/run_codex_guest.sh"
+        ],
+        "enabled": true,
+        "executor_id": "codex",
+        "model": "codex/gpt-5.6-sol",
+        "timeout_seconds": 300,
+        "type": "cli"
+      },
+      "participant_id": "implementation_engineer-01",
+      "role_id": "implementation_engineer",
+      "role_snapshot": {
+        "authority": {
+          "can_decide": false,
+          "can_execute": false,
+          "can_recommend": true
+        },
+        "name": "Implementation Engineer",
+        "purpose": "将已批准设计转化为可实现的工程任务与代码建议。",
+        "role_id": "implementation_engineer"
+      }
+    },
+    {
+      "executor_id": "qwen_local",
+      "executor_snapshot": {
+        "adapter": "opencode",
+        "capabilities": [
+          "reasoning",
+          "summarization"
+        ],
+        "command_template": [
+          "opencode",
+          "run",
+          "-m",
+          "{model}",
+          "--auto"
+        ],
+        "enabled": true,
+        "executor_id": "qwen_local",
+        "model": "gpu-llama/qwen3.6-35b",
+        "timeout_seconds": 180,
+        "type": "cli"
+      },
+      "participant_id": "test_reviewer-01",
+      "role_id": "test_reviewer",
+      "role_snapshot": {
+        "authority": {
+          "can_decide": false,
+          "can_execute": false,
+          "can_recommend": true
+        },
+        "name": "Test Reviewer",
+        "purpose": "审查测试策略、覆盖范围与验收标准。",
+        "role_id": "test_reviewer"
+      }
+    },
+    {
+      "executor_id": "grok",
+      "executor_snapshot": {
+        "adapter": "opencode",
+        "capabilities": [
+          "reasoning",
+          "adversarial_review"
+        ],
+        "command_template": [
+          "opencode",
+          "run",
+          "-m",
+          "{model}",
+          "--auto"
+        ],
+        "enabled": true,
+        "executor_id": "grok",
+        "model": "hermes-grok/grok-4.3",
+        "timeout_seconds": 300,
+        "type": "cli"
+      },
+      "participant_id": "adversarial_reviewer-01",
+      "role_id": "adversarial_reviewer",
+      "role_snapshot": {
+        "authority": {
+          "can_decide": false,
+          "can_execute": false,
+          "can_recommend": true
+        },
+        "name": "Adversarial Reviewer",
+        "purpose": "挑战假设、指出失败路径与不可验证结论。",
+        "role_id": "adversarial_reviewer"
+      }
+    },
+    {
+      "executor_id": "qwen_local",
+      "executor_snapshot": {
+        "adapter": "opencode",
+        "capabilities": [
+          "reasoning",
+          "summarization"
+        ],
+        "command_template": [
+          "opencode",
+          "run",
+          "-m",
+          "{model}",
+          "--auto"
+        ],
+        "enabled": true,
+        "executor_id": "qwen_local",
+        "model": "gpu-llama/qwen3.6-35b",
+        "timeout_seconds": 180,
+        "type": "cli"
+      },
+      "participant_id": "recorder-01",
+      "role_id": "recorder",
+      "role_snapshot": {
+        "authority": {
+          "can_decide": false,
+          "can_execute": false,
+          "can_recommend": true
+        },
+        "name": "Recorder",
+        "purpose": "记录会议结论、待决事项与可追溯证据引用。",
+        "role_id": "recorder"
+      }
+    }
+  ],
+  "provenance": {
+    "bindings_sha256": "335d5d79c7aa406b6643f3c1140143fd858213107b11d76e1abea4dd5553207d",
+    "bindings_source": "file",
+    "generated_at": "2026-07-10T12:00:00Z"
+  },
+  "scenario": {
+    "id": "project_development",
+    "source_sha256": "fee72181d477e895facaf51ed989527019be59fd98bc82cdc4084db355273564",
+    "version": "1.0"
+  },
+  "schema_version": "1.0",
+  "stages": [
+    {
+      "actor_role_ids": [
+        "architect"
+      ],
+      "name": "SCOPE",
+      "owner_gate": false,
+      "stage_id": "scope"
+    },
+    {
+      "actor_role_ids": [
+        "architect"
+      ],
+      "name": "DESIGN",
+      "owner_gate": false,
+      "stage_id": "design"
+    },
+    {
+      "actor_role_ids": [
+        "test_reviewer",
+        "adversarial_reviewer"
+      ],
+      "name": "REVIEW",
+      "owner_gate": false,
+      "stage_id": "review"
+    },
+    {
+      "actor_role_ids": [],
+      "name": "OWNER APPROVAL",
+      "owner_gate": true,
+      "stage_id": "owner_gate"
+    },
+    {
+      "actor_role_ids": [
+        "implementation_engineer"
+      ],
+      "name": "IMPLEMENT",
+      "owner_gate": false,
+      "stage_id": "implementation"
+    },
+    {
+      "actor_role_ids": [
+        "test_reviewer"
+      ],
+      "name": "TEST",
+      "owner_gate": false,
+      "stage_id": "test"
+    },
+    {
+      "actor_role_ids": [
+        "adversarial_reviewer"
+      ],
+      "name": "ACCEPTANCE REVIEW",
+      "owner_gate": false,
+      "stage_id": "acceptance"
+    },
+    {
+      "actor_role_ids": [
+        "recorder"
+      ],
+      "name": "DELIVERY",
+      "owner_gate": false,
+      "stage_id": "delivery"
+    }
+  ],
+  "topic": "Owner Dashboard 开发"
+}

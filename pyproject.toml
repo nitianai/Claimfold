@@ -1,0 +1,13 @@
+[project]
+name = "claimfold"
+version = "0.2.0"
+description = "Multi-model research council engine"
+requires-python = ">=3.10"
+dependencies = ["PyYAML>=6.0", "jsonschema>=4.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["lib"]

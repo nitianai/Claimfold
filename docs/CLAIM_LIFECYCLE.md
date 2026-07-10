@@ -334,7 +334,7 @@ V0.2 增加**跨会话可复用主张（cross-session reusable claims）**，且
 ```
 
 **可写（Writable）：** raw、summary.json（每轮）、meeting_state（仅来自 summary.json）、claims.jsonl（仅事件）  
-**永不可写（Never writable）：** claims_index.json、investment_report.md、final.md  
+**不可手工编辑 / 非独立真相源（engine 可自动生成或重建）：** claims_index.json、investment_report.md、final.md  
 **永不允许晋升路径（Never promotes）：** Report → Claim、State → Claim（未经 Owner PROMOTE）
 
 ---

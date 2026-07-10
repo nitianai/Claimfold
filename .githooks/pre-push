@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Block git push when local CI fails (P2 gate).
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+echo "pre-push: running Claimfold CI..."
+exec "$ROOT/scripts/ci.sh"

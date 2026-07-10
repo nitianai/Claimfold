@@ -1,0 +1,60 @@
+scenario_id: project_development
+version: "1.0"
+name: 项目开发
+purpose: 对项目需求、架构、实现和交付进行协作。
+
+required_roles:
+  - moderator
+  - architect
+  - implementation_engineer
+  - test_reviewer
+  - adversarial_reviewer
+  - recorder
+
+optional_roles:
+  - security_reviewer
+  - product_analyst
+
+stages:
+  - id: scope
+    name: SCOPE
+    actors:
+      - architect
+  - id: design
+    name: DESIGN
+    actors:
+      - architect
+  - id: review
+    name: REVIEW
+    actors:
+      - test_reviewer
+      - adversarial_reviewer
+  - id: owner_gate
+    name: OWNER APPROVAL
+    actors:
+      - owner
+  - id: implementation
+    name: IMPLEMENT
+    actors:
+      - implementation_engineer
+  - id: test
+    name: TEST
+    actors:
+      - test_reviewer
+  - id: acceptance
+    name: ACCEPTANCE REVIEW
+    actors:
+      - adversarial_reviewer
+  - id: delivery
+    name: DELIVERY
+    actors:
+      - recorder
+
+decision_policy:
+  council_can_recommend: true
+  council_can_decide: false
+  owner_approval_required: true
+
+termination:
+  max_rounds: 10
+  pause_every_rounds: 3

@@ -1,0 +1,30 @@
+{
+  "round": "20260710-060458",
+  "generated_at": "2026-07-10T06:05:44Z",
+  "guests": [
+    {
+      "guest": "codex",
+      "prompt": "/home/cnhanbing/Claimfold/docs/audit_guest_responses/round-20260710-060458/prompt-codex.md",
+      "raw": "/home/cnhanbing/Claimfold/docs/audit_guest_responses/round-20260710-060458/raw-codex.md",
+      "chars": 1812,
+      "ok": true,
+      "stderr": ""
+    },
+    {
+      "guest": "qoder",
+      "prompt": "/home/cnhanbing/Claimfold/docs/audit_guest_responses/round-20260710-060458/prompt-qoder.md",
+      "raw": "/home/cnhanbing/Claimfold/docs/audit_guest_responses/round-20260710-060458/raw-qoder.md",
+      "chars": 226,
+      "ok": true,
+      "stderr": ""
+    },
+    {
+      "guest": "grok",
+      "prompt": "/home/cnhanbing/Claimfold/docs/audit_guest_responses/round-20260710-060458/prompt-grok.md",
+      "raw": "/home/cnhanbing/Claimfold/docs/audit_guest_responses/round-20260710-060458/raw-grok.md",
+      "chars": 652,
+      "ok": true,
+      "stderr": "\u001b[0m\n> build · grok-4.3\n\u001b[0m\n\u001b[0m→ \u001b[0mRead docs/AUDIT_REPORT_codex.md\u001b[90m [offset=1, limit=100]\u001b[0m\n\u001b[0m✗ \u001b[0mRead docs/REBUTTAL_grok.md failed\u001b[90m [offset=1, limit=100]\u001b[0m\n\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/cnhanbing/Claimfold/docs/REBUTTAL_grok.md\n"
+    }
+  ]
+}

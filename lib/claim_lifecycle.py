@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import fcntl
 import hashlib
 import json
 import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+from utils import utc_now
 
 CLAIMS_DIR_NAME = "claims"
 LEDGER_FILE = "claims.jsonl"
@@ -48,8 +51,7 @@ def index_path(root: Path) -> Path:
     return claims_dir(root) / INDEX_FILE
 
 
-def utc_now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+ALLOWED_EVIDENCE_DIRS = frozenset({"raw", "summaries", "context"})
 
 
 def ensure_claims_dir(root: Path) -> Path:
@@ -80,19 +82,72 @@ def load_events(root: Path) -> list[dict[str, Any]]:
 def append_event(root: Path, event: dict[str, Any]) -> None:
     ensure_claims_dir(root)
     with ledger_path(root).open("a", encoding="utf-8") as f:
-        f.write(json.dumps(event, ensure_ascii=False) + "\n")
+        try:
+            fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+            f.write(json.dumps(event, ensure_ascii=False) + "\n")
+            f.flush()
+        finally:
+            fcntl.flock(f.fileno(), fcntl.LOCK_UN)
 
 
-def next_claim_id(root: Path) -> str:
-    events = load_events(root)
+def _max_promote_id_from_text(text: str) -> int:
     max_n = 0
-    for ev in events:
+    for line in text.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            ev = json.loads(line)
+        except json.JSONDecodeError:
+            continue
         if ev.get("event") != "PROMOTE":
             continue
         m = re.match(r"clm-(\d+)", ev.get("claim_id", ""))
         if m:
             max_n = max(max_n, int(m.group(1)))
-    return f"clm-{max_n + 1:06d}"
+    return max_n
+
+
+def _with_ledger_lock(root: Path):
+    ensure_claims_dir(root)
+    path = ledger_path(root)
+    f = path.open("a+", encoding="utf-8")
+    fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+    return f
+
+
+def next_claim_id(root: Path) -> str:
+    """Allocate the next PROMOTE claim_id under an exclusive flock.
+
+    Prefer ``append_promote_event`` for promotions: it allocates and appends
+    atomically. This helper only reserves an id; a separate ``append_event``
+    call can still race if used without the same lock scope.
+    """
+    f = _with_ledger_lock(root)
+    try:
+        f.seek(0)
+        max_n = _max_promote_id_from_text(f.read())
+        return f"clm-{max_n + 1:06d}"
+    finally:
+        fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+        f.close()
+
+
+def append_promote_event(root: Path, event: dict[str, Any]) -> str:
+    """Allocate claim_id and append PROMOTE under a single exclusive flock."""
+    f = _with_ledger_lock(root)
+    try:
+        f.seek(0)
+        max_n = _max_promote_id_from_text(f.read())
+        out = dict(event)
+        out["claim_id"] = out.get("claim_id") or f"clm-{max_n + 1:06d}"
+        f.seek(0, 2)
+        f.write(json.dumps(out, ensure_ascii=False) + "\n")
+        f.flush()
+        return out["claim_id"]
+    finally:
+        fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+        f.close()
 
 
 def normalize_statement(text: str) -> str:
@@ -148,24 +203,110 @@ def validate_promotion_candidate(
     if field == "open_questions":
         errors.append("open_questions 不能晋升为主张")
 
-    if field == "conflicts":
-        conflicts = state.get("conflicts", [])
-        if index < len(conflicts) and conflicts[index] == text:
-            pass
-    elif field == "confirmed_points":
-        pass
-    else:
+    if field not in ("conflicts", "confirmed_points"):
         errors.append(f"不支持的字段: {field}")
+
+    if field == "confirmed_points":
+        active_conflicts = [str(c).strip() for c in state.get("conflicts", [])]
+        if text in active_conflicts:
+            errors.append("陈述仍存在于活跃 conflicts，不可从 confirmed_points 晋升")
+
+    history = state.get("history", [])
+    if len(history) <= 1:
+        guest_count = 0
+        if history:
+            h = history[0]
+            if h.get("mode") == "parallel":
+                guest_count = len(h.get("guests", []))
+            else:
+                guest_count = 1
+        if guest_count <= 1:
+            errors.append("单轮单 Guest 无 RESPOND 链（single-round singleton），默认拒绝晋升")
 
     if not evidence_refs:
         errors.append("evidence_refs 必填")
     else:
+        anchor = _statement_anchor(_strip_speaker_prefix(text))
+        norm_anchor = _normalize_for_anchor(anchor)
+        anchored = False
+        read_any = False
         for ref in evidence_refs:
-            p = meeting_dir / ref if not ref.startswith("meet-") else Path(ref)
-            if not p.exists():
-                errors.append(f"证据文件不存在: {ref}")
+            p, path_error = _resolve_evidence_file(ref, meeting_dir=meeting_dir)
+            if path_error:
+                errors.append(path_error)
+                continue
+            assert p is not None
+            try:
+                content = p.read_text(encoding="utf-8")
+            except OSError as exc:
+                errors.append(f"无法读取证据文件 {ref}: {exc}")
+                continue
+            read_any = True
+            if norm_anchor and norm_anchor in _normalize_for_anchor(content):
+                anchored = True
+        if read_any and not anchored and norm_anchor:
+            errors.append("证据 raw 中未找到陈述锚点（statement anchor）")
 
     return errors
+
+
+def _resolve_evidence_file(ref: str, *, meeting_dir: Path) -> tuple[Path | None, str | None]:
+    """Resolve and validate an evidence ref before reading."""
+    rel = (ref or "").strip()
+    if not rel:
+        return None, "证据路径为空"
+
+    meeting_name = meeting_dir.name
+    if rel.startswith(f"{meeting_name}/"):
+        rel = rel[len(meeting_name) + 1 :]
+
+    if rel.startswith(("/", "\\")):
+        return None, f"证据路径必须为相对路径: {ref}"
+
+    pure = Path(rel)
+    if pure.is_absolute():
+        return None, f"证据路径必须为相对路径: {ref}"
+
+    parts = pure.parts
+    if not parts or parts[0] not in ALLOWED_EVIDENCE_DIRS:
+        return None, f"证据路径不在允许目录 raw/summaries/context: {ref}"
+    if any(part == ".." for part in parts):
+        return None, f"证据路径禁止目录穿越: {ref}"
+
+    meeting_root = meeting_dir.resolve()
+    candidate = (meeting_root / pure).resolve()
+    try:
+        candidate.relative_to(meeting_root)
+    except ValueError:
+        return None, f"证据路径越界: {ref}"
+
+    allowed_root = (meeting_root / parts[0]).resolve()
+    try:
+        candidate.relative_to(allowed_root)
+    except ValueError:
+        return None, f"证据路径不在允许目录 raw/summaries/context: {ref}"
+
+    if not candidate.exists():
+        return None, f"证据文件不存在: {ref}"
+    if not candidate.is_file():
+        return None, f"证据路径必须是文件: {ref}"
+    return candidate, None
+
+
+def _strip_speaker_prefix(statement: str) -> str:
+    """Strip JSON-mode state decoration like ``[codex] evidence text``."""
+    return re.sub(r"^\[[^\]]+\]\s*", "", (statement or "").strip(), count=1)
+
+
+def _normalize_for_anchor(text: str) -> str:
+    return re.sub(r"\s+", "", (text or "").lower())
+
+
+def _statement_anchor(statement: str, *, min_len: int = 12) -> str:
+    cleaned = re.sub(r"\s+", " ", (statement or "").strip())
+    if len(cleaned) < min_len:
+        return cleaned.lower()
+    return cleaned[: min(80, len(cleaned))].lower()
 
 
 def fold_claims(events: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
@@ -347,6 +488,8 @@ def parse_claim_responses_from_raw(
     guest: str,
     meeting_id: str,
     meeting_dir: Path,
+    allowed_claim_ids: set[str] | None = None,
+    raw_rel_path: str = "",
 ) -> list[dict[str, Any]]:
     events: list[dict[str, Any]] = []
     section = ""
@@ -377,13 +520,15 @@ def parse_claim_responses_from_raw(
             stmt = m.group(3).strip()
             if resp not in RESPONSE_TYPES:
                 continue
-            rel = f"meetings/{meeting_dir.name}/raw/"
+            if allowed_claim_ids is not None and cid not in allowed_claim_ids:
+                continue
+            evidence = raw_rel_path or f"{meeting_dir.name}/raw/"
             events.append(
                 {
                     "event": "RESPOND",
                     "claim_id": cid,
                     "response": resp,
-                    "evidence_refs": [f"{meeting_dir.name}/raw/"],
+                    "evidence_refs": [evidence],
                     "meeting_id": meeting_id,
                     "actor": f"guest:{guest}",
                     "statement": stmt[:500],
@@ -393,14 +538,17 @@ def parse_claim_responses_from_raw(
             matched = True
             break
         if not matched and claim_id and claim_id in line:
+            if allowed_claim_ids is not None and claim_id not in allowed_claim_ids:
+                continue
             for resp in RESPONSE_TYPES:
                 if resp in line.upper():
+                    evidence = raw_rel_path or f"{meeting_dir.name}/raw/"
                     events.append(
                         {
                             "event": "RESPOND",
                             "claim_id": claim_id,
                             "response": resp,
-                            "evidence_refs": [],
+                            "evidence_refs": [evidence],
                             "meeting_id": meeting_id,
                             "actor": f"guest:{guest}",
                             "statement": line[:500],

@@ -1,0 +1,72 @@
+roles:
+  moderator:
+    role_id: moderator
+    name: Moderator
+    purpose: 引导会议流程，确保各方按阶段发言，不代替 Owner 决策。
+    authority:
+      can_recommend: true
+      can_decide: false
+      can_execute: false
+
+  architect:
+    role_id: architect
+    name: Architect
+    purpose: 提出架构方案、模块边界与技术选型建议。
+    authority:
+      can_recommend: true
+      can_decide: false
+      can_execute: false
+
+  implementation_engineer:
+    role_id: implementation_engineer
+    name: Implementation Engineer
+    purpose: 将已批准设计转化为可实现的工程任务与代码建议。
+    authority:
+      can_recommend: true
+      can_decide: false
+      can_execute: false
+
+  test_reviewer:
+    role_id: test_reviewer
+    name: Test Reviewer
+    purpose: 审查测试策略、覆盖范围与验收标准。
+    authority:
+      can_recommend: true
+      can_decide: false
+      can_execute: false
+
+  adversarial_reviewer:
+    role_id: adversarial_reviewer
+    name: Adversarial Reviewer
+    purpose: 挑战假设、指出失败路径与不可验证结论。
+    authority:
+      can_recommend: true
+      can_decide: false
+      can_execute: false
+
+  recorder:
+    role_id: recorder
+    name: Recorder
+    purpose: 记录会议结论、待决事项与可追溯证据引用。
+    authority:
+      can_recommend: true
+      can_decide: false
+      can_execute: false
+
+  security_reviewer:
+    role_id: security_reviewer
+    name: Security Reviewer
+    purpose: 审查安全边界与威胁模型（可选角色）。
+    authority:
+      can_recommend: true
+      can_decide: false
+      can_execute: false
+
+  product_analyst:
+    role_id: product_analyst
+    name: Product Analyst
+    purpose: 澄清需求范围与验收标准（可选角色）。
+    authority:
+      can_recommend: true
+      can_decide: false
+      can_execute: false

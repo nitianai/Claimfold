@@ -1,0 +1,7 @@
+bindings:
+  moderator: qwen_local
+  architect: claude
+  implementation_engineer: codex
+  test_reviewer: qwen_local
+  adversarial_reviewer: grok
+  recorder: qwen_local

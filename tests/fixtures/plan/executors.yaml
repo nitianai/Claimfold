@@ -1,0 +1,77 @@
+executors:
+  qwen_local:
+    type: cli
+    adapter: opencode
+    model: gpu-llama/qwen3.6-35b
+    command_template:
+      - opencode
+      - run
+      - "-m"
+      - "{model}"
+      - "--auto"
+    capabilities:
+      - reasoning
+      - summarization
+    timeout_seconds: 180
+    enabled: true
+
+  claude:
+    type: cli
+    adapter: opencode
+    model: anthropic/claude-sonnet-4-6
+    command_template:
+      - opencode
+      - run
+      - "-m"
+      - "{model}"
+      - "--auto"
+    capabilities:
+      - reasoning
+      - architecture
+      - long_context
+    timeout_seconds: 300
+    enabled: true
+    secret_refs:
+      - ANTHROPIC_API_KEY
+
+  codex:
+    type: cli
+    adapter: bash
+    model: codex/gpt-5.6-sol
+    command_template:
+      - bash
+      - scripts/run_codex_guest.sh
+    capabilities:
+      - coding
+      - repository_access
+      - testing
+    timeout_seconds: 300
+    enabled: true
+
+  grok:
+    type: cli
+    adapter: opencode
+    model: hermes-grok/grok-4.3
+    command_template:
+      - opencode
+      - run
+      - "-m"
+      - "{model}"
+      - "--auto"
+    capabilities:
+      - reasoning
+      - adversarial_review
+    timeout_seconds: 300
+    enabled: true
+
+  disabled_executor:
+    type: cli
+    adapter: opencode
+    model: example/disabled
+    command_template:
+      - opencode
+      - run
+      - "-m"
+      - "{model}"
+    timeout_seconds: 60
+    enabled: false
