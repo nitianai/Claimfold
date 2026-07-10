@@ -172,6 +172,30 @@ python3 scripts/compare_meetings.py meet-20260710-021348 meet-20260710-021510
 
 ---
 
+## 5b. 实验 F′ — grok 真实 context 对照
+
+**会议：** `meet-20260710-040737`  
+**context：** 真实 qwen 生成（8064 字，含中东/Trump/Fed/油价）+ E2 tsla_data  
+**对照：** `meet-20260710-040135`（context LLM mock，grok DEFER）
+
+| 指标 | F′ 真实 context | F mock context |
+|------|-----------------|----------------|
+| R1 耗时 | 80.0s | 73.4s |
+| Mock率 | 0% | 0% |
+| OQ 合计 | **9** | 15 |
+| CP 合计 | **16** | 27 |
+| grok R1 | **CHALLENGE** clm-000004（中东+油价+VIX） | DEFER（无地缘数据） |
+| grok R2 | +3 CP，Fed 独立性 + SpaceX S-1 | 未参与 |
+| 语义闭环 | **通过** | 通过 |
+
+**grok-4.3 真实 context 样本（R1）：**
+
+> 中东美伊停火结束、油价推升；地缘风险利空高估值科技股；CHALLENGE clm-000004：low VIX + Robotaxi 被高 PE 356x 与中东风险部分抵消。
+
+**结论：** context 质量决定 grok 职能位价值；真实 context 下 grok 从 DEFER → 实质性 CHALLENGE，且 OQ/CP 重复显著下降。
+
+---
+
 ## 6. 模型分层实验（稳定性探测）
 
 **探测方法：** `opencode run -m <model> --auto "回复ok"` + 会议实测
@@ -292,7 +316,8 @@ max_parallel: 6
 | `meet-20260710-023309` | TSLA-4轮 | `raw/round-001-qwen.md`, `raw/round-004-mimo.md` |
 | `meet-20260710-033125` | **Phase2-E1/E2/E3/E4** | `context/tsla_data.md`, `metrics.json` |
 | `meet-20260710-033604` | **Phase2-E5-Claim-CHALLENGE** | `raw/round-001-mimo.md`, `clm-000004` |
-| `meet-20260710-040135` | **5人风格分化-grok4.3** | `metrics.json`, `raw/round-001-mimo.md` |
+| `meet-20260710-040135` | **5人风格分化-grok4.3**（context mock） | `raw/round-001-laguna.md` DEFER |
+| `meet-20260710-040737` | **5人风格分化-grok真实context** | `raw/round-001-laguna.md` CHALLENGE |
 
 会议产物在 `meetings/`（`.gitignore`），本地保留；指标摘要在本文件。
 
