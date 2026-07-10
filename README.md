@@ -87,7 +87,9 @@ COUNCIL_MOCK=1 ./council.sh run-parallel
 - `--max-rounds N` — 最大轮次（standard/research 默认 12，investment 默认 100）
 - `--mode research` — 启用并行 Research Runtime
 
-## Claim Lifecycle V0.2（跨会话试探性主张）
+## Claim Lifecycle V0.2（可生产 · 跨会话试探性主张）
+
+> **状态：** 已冻结、已验收（2026-07-10）。规范见 [`docs/CLAIM_LIFECYCLE.md`](docs/CLAIM_LIFECYCLE.md) §6–§7。
 
 ```bash
 # 会议 A：从分歧晋升
