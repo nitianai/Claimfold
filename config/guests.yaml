@@ -1,0 +1,65 @@
+max_parallel: 3
+
+guests:
+  qwen:
+    role_id: macro_strategist
+    role: "Global Macro Strategist — 跨资产宏观与情景概率"
+    model: "gpu-llama/qwen3.6-35b"
+    command: "opencode run -m gpu-llama/qwen3.6-35b --auto"
+    enabled: true
+    timeout_seconds: 180
+    allow_parallel: true
+
+  hy3:
+    role_id: geo_policy_risk
+    role: "Geopolitical & Policy Risk Officer — 地缘、央行、关税政策"
+    model: "opencode/hy3-free"
+    command: "opencode run -m opencode/hy3-free --auto"
+    enabled: true
+    timeout_seconds: 180
+    allow_parallel: true
+
+  north:
+    role_id: energy_analyst
+    role: "Commodities Desk Head — 黄金、原油、能源"
+    model: "opencode/north-mini-code-free"
+    command: "opencode run -m opencode/north-mini-code-free --auto"
+    enabled: true
+    timeout_seconds: 180
+    allow_parallel: true
+
+  mimo:
+    role_id: equity_strategist
+    role: "Equity Strategist — 美股、A股、港股、行业轮动"
+    model: "opencode/mimo-v2.5-free"
+    command: "opencode run -m opencode/mimo-v2.5-free --auto"
+    enabled: true
+    timeout_seconds: 180
+    allow_parallel: true
+
+  nemo:
+    role_id: rates_fx_strategist
+    role: "Rates & FX Strategist — 美债、美元、人民币、资金流"
+    model: "opencode/nemotron-3-ultra-free"
+    command: "opencode run -m opencode/nemotron-3-ultra-free --auto"
+    enabled: true
+    timeout_seconds: 180
+    allow_parallel: true
+
+  summarizer:
+    role: "Meeting Secretary"
+    model: "opencode/deepseek-v4-flash-free"
+    command: "opencode run -m opencode/deepseek-v4-flash-free --auto"
+    enabled: true
+    timeout_seconds: 120
+    allow_parallel: false
+
+  reporter:
+    role_id: report_writer
+    role: "Final Report Writer — 仅 stop 时生成 Markdown 报告"
+    model: "gpu-llama/qwen3.6-35b"
+    command: "opencode run -m gpu-llama/qwen3.6-35b --auto"
+    enabled: true
+    reporter: true
+    timeout_seconds: 300
+    allow_parallel: false

@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Runtime / local state
+.current_meeting
+
+# Meeting artifacts (regenerable; keep repo lean)
+meetings/
+
+# Optional local reports (regenerable)
+报告_*.md
+
+# Editor / OS
+.DS_Store
+*.swp
+*~
+.idea/
+.vscode/
