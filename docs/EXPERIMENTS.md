@@ -131,7 +131,48 @@ python3 scripts/compare_meetings.py meet-20260710-021348 meet-20260710-021510
 
 ---
 
-## 5. 模型分层实验（稳定性探测）
+## 5. 实验 F — 5 人风格分化（TSLA，真实 CLI）
+
+**会议：** `meet-20260710-040135`  
+**阵容：** `tsla_feed` + `qwen` + `grok`(laguna→4.3) + `mimo` + `nemo`  
+**流程：** context（E2 脚本 ✅，LLM context mock）→ R1 五人 → R2 自动三人 → 语义闭环
+
+| 轮次 | 嘉宾 | 耗时 | Mock | 风格贡献 |
+|------|------|------|------|----------|
+| R1 | tsla_feed | 0.3s | 否 | 证据层 $406.55 |
+| R1 | qwen | 31.8s | 否 | 宏观区间 $393–$420，引用 clm-000004 |
+| R1 | grok-4.3 | 28.2s | 否 | **DEFER** clm-000004（无地缘数据，守纪律） |
+| R1 | mimo | 41.6s | 否 | 个股深挖 + **CHALLENGE** 废弃 SpaceX merge |
+| R1 | nemo | 20.6s | 否 | 利率视角 **CHALLENGE** 高 PE vs 低 VIX |
+| R2 | qwen+north+mimo | 89.4s | 否 | 语义闭环 **通过** |
+
+| 指标 | R1（5人） | R1+R2 合计 | 对照 8人实验 B |
+|------|-----------|------------|----------------|
+| 耗时 | 73.4s | 162.8s | 883s |
+| Mock率 | 0% | 0% | 38% |
+| OQ | 11 | **15** | 13 |
+| CP | 17 | 27（有重复） | 13 |
+| 语义闭环 | — | **通过** | 未测 |
+
+**结论：**
+
+1. **5 人风格分化有效** — 证据/宏观/地缘/个股/利率五类输出，且 grok、mimo、nemo 对 `clm-000004` 给出 DEFER/CHALLENGE 三种不同回应。
+2. **人多不必同场重复** — R2 引擎自动缩为 3 人（qwen+north+mimo）仍通过语义闭环；**第二轮不必再堆 5 人**。
+3. **OQ=15 接近发散阈值** — 5 人已够；再加 gptoss20/north 同轮会放大 CP/OQ 重复。
+4. **grok 依赖 context 质量** — LLM context mock 时 grok 正确 DEFER，不硬编地缘；下一场须真实 `context` 才能发挥。
+5. **推荐生产阵容不变：4–5 职能位**，不是 6–8 同族模型。
+
+```bash
+# 推荐 select（TSLA / 个股）
+./council.sh select tsla_feed qwen grok mimo nemo   # R1
+./council.sh run-parallel
+./council.sh select qwen mimo                       # R2 语义闭环即可，或 run-parallel 让引擎 auto-pick
+./council.sh run-parallel
+```
+
+---
+
+## 6. 模型分层实验（稳定性探测）
 
 **探测方法：** `opencode run -m <model> --auto "回复ok"` + 会议实测
 
@@ -166,7 +207,7 @@ python3 scripts/compare_meetings.py meet-20260710-021348 meet-20260710-021510
 
 ---
 
-## 6. 架构实验结论（模型无关）
+## 7. 架构实验结论（模型无关）
 
 ```
 会议产出质量 ≈
@@ -188,19 +229,19 @@ python3 scripts/compare_meetings.py meet-20260710-021348 meet-20260710-021510
 
 ---
 
-## 7. 冻结的生产配置（2026-07-10）
+## 8. 冻结的生产配置（2026-07-10）
 
 ```yaml
 # config/guests.yaml — 实验平台默认阵容（最差基线）
 max_parallel: 6
 
-推荐 select:
-  qwen        # 宏观锚（gpu-llama，allow_parallel: false）
-  mimo        # 个股（deepseek-v4-flash）
-  gptoss20    # 结构化推理
+推荐 select（R1，4–5 职能位）:
+  tsla_feed   # 证据脚本（个股议题）
+  qwen        # 宏观锚（串行）
+  grok        # 地缘政策（grok-4.3）
+  mimo        # 个股挑战
   nemo        # 利率/外汇
-  laguna      # 地缘（按需，grok 别名）
-  north       # 大宗（按需）
+按需（勿同轮全加）: gptoss20（结构化）, north（大宗）
 ```
 
 **单场推荐流程：**
@@ -218,7 +259,7 @@ max_parallel: 6
 
 ---
 
-## 8. Phase 2 实验（E1–E5）— ✅ 2026-07-10 完成
+## 9. Phase 2 实验（E1–E5）— ✅ 2026-07-10 完成
 
 > Phase 2 已完成。封板待 Owner 确认（建议复验黄金 §7 B 轮去 mock）。
 
@@ -241,7 +282,7 @@ max_parallel: 6
 
 ---
 
-## 9. 实验会议索引
+## 10. 实验会议索引
 
 | 会议 ID | 标签 | 关键文件 |
 |---------|------|----------|
@@ -251,12 +292,13 @@ max_parallel: 6
 | `meet-20260710-023309` | TSLA-4轮 | `raw/round-001-qwen.md`, `raw/round-004-mimo.md` |
 | `meet-20260710-033125` | **Phase2-E1/E2/E3/E4** | `context/tsla_data.md`, `metrics.json` |
 | `meet-20260710-033604` | **Phase2-E5-Claim-CHALLENGE** | `raw/round-001-mimo.md`, `clm-000004` |
+| `meet-20260710-040135` | **5人风格分化-grok4.3** | `metrics.json`, `raw/round-001-mimo.md` |
 
 会议产物在 `meetings/`（`.gitignore`），本地保留；指标摘要在本文件。
 
 ---
 
-## 10. 元结论（Meta）
+## 11. 元结论（Meta）
 
 1. **Phase 2 已完成（E1–E5）** — 证据脚本、Data Guest、model_tier、TSLA 跨会 Claim 全链真实 CLI 验证。
 2. **证据层 ROI 显著** — `tsla_feed` 0.3s 消灭「缺 CLI」OQ；market_context 含真实 $406.55 行情。
