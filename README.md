@@ -89,7 +89,7 @@ COUNCIL_MOCK=1 ./council.sh run-parallel
 
 ## Claim Lifecycle V0.2（跨会话试探性主张）
 
-> **状态：** §6 代码已交付；**未封板** — 须完成实验平台 Phase 2（`docs/EXPERIMENTS.md` §8 E1–E5）后再验收。规范见 [`docs/CLAIM_LIFECYCLE.md`](docs/CLAIM_LIFECYCLE.md)。
+> **状态：** §6 已交付，Phase 2（E1–E5）已完成；**封板待 Owner 确认**（建议复验黄金 §7 B 轮去 mock）。规范见 [`docs/CLAIM_LIFECYCLE.md`](docs/CLAIM_LIFECYCLE.md)。
 
 ```bash
 # 会议 A：从分歧晋升

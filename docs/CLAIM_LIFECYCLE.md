@@ -301,7 +301,7 @@ V0.2 增加**跨会话可复用主张（cross-session reusable claims）**，且
 | A promote | `meet-20260710-015200` → `clm-000001` | ✅ 真实 CLI |
 | B 注入 + CHALLENGE | `meet-20260710-015733`（R1 含 mock） | ⚠️ 部分真实；封板前须无 mock 复验 |
 | C retire + verify | `claim retire` + `claim verify` | ✅ 通过 |
-| E5 TSLA 跨会 CHALLENGE | `meet-20260710-023309` 命题 | ❌ Phase 2 待做 |
+| E5 TSLA 跨会 CHALLENGE | `clm-000004` → `meet-20260710-033604`，mimo 真实 raw | ✅ CONTESTED |
 
 复现：`docs/EXPERIMENTS.md` §3。
 
@@ -346,9 +346,9 @@ V0.2 增加**跨会话可复用主张（cross-session reusable claims）**，且
 | 语义闭环（Semantic Loop） | ✅ 已交付（Research `run-parallel`） |
 | 主张生命周期 V0.2 — §6 实现 | ✅ 代码已交付（`lib/claim_lifecycle.py` + `claim` CLI） |
 | §7 三场会议验收 | ⚠️ 黄金链路已跑通；封板前须真实 CLI 全链复验 + E5 |
-| 实验平台 Phase 2（E1–E5） | ❌ 未完成 — **V0.2 封板前置条件** |
+| 实验平台 Phase 2（E1–E5） | ✅ 已完成（见 `docs/EXPERIMENTS.md` §8） |
 | Claim 指标 §8 | ⏳ 推迟至 V0.3 |
-| **V0.2 封板** | **未封板** — 待 Phase 2 完成后统一验收 |
+| **V0.2 封板** | **待 Owner 确认** — Phase 2 达标；黄金 §7 B 轮建议去 mock 复验 |
 
 ---
 

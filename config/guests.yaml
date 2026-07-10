@@ -2,6 +2,8 @@ max_parallel: 6
 
 guests:
   qwen:
+    guest_type: llm
+    model_tier: anchor
     role_id: macro_strategist
     role: "Global Macro Strategist — 跨资产宏观与情景概率"
     model: "gpu-llama/qwen3.6-35b"
@@ -11,6 +13,8 @@ guests:
     allow_parallel: false
 
   north:
+    guest_type: llm
+    model_tier: floor
     role_id: energy_analyst
     role: "Commodities Desk Head — 黄金、原油、能源"
     model: "openrouter/cohere/north-mini-code:free"
@@ -20,6 +24,8 @@ guests:
     allow_parallel: true
 
   nemo:
+    guest_type: llm
+    model_tier: floor
     role_id: rates_fx_strategist
     role: "Rates & FX Strategist — 美债、美元、人民币、资金流"
     model: "openrouter/nvidia/nemotron-3-nano-30b-a3b:free"
@@ -29,6 +35,8 @@ guests:
     allow_parallel: true
 
   mimo:
+    guest_type: llm
+    model_tier: floor
     role_id: equity_strategist
     role: "Equity Strategist — 个股定价、财报、板块β与行业轮动"
     model: "opencode/deepseek-v4-flash-free"
@@ -38,6 +46,8 @@ guests:
     allow_parallel: true
 
   gptoss20:
+    guest_type: llm
+    model_tier: floor
     role_id: oss_reasoner
     role: "GPT-OSS 20B — 结构化推理"
     model: "openrouter/openai/gpt-oss-20b:free"
@@ -47,6 +57,8 @@ guests:
     allow_parallel: true
 
   laguna:
+    guest_type: llm
+    model_tier: floor
     role_id: poolside_analyst
     role: "Laguna M.1 — 地缘与政策风险"
     model: "openrouter/poolside/laguna-m.1:free"
@@ -56,6 +68,8 @@ guests:
     allow_parallel: true
 
   omni:
+    guest_type: llm
+    model_tier: floor
     role_id: omni_reasoner
     role: "Nemotron Omni — 多模态推理"
     model: "openrouter/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
@@ -64,7 +78,31 @@ guests:
     timeout_seconds: 180
     allow_parallel: true
 
+  claude_premium:
+    guest_type: llm
+    model_tier: premium
+    role_id: macro_strategist
+    role: "Premium Macro Strategist — Claude Sonnet 4（E1 上限对照）"
+    model: "openrouter/anthropic/claude-sonnet-4"
+    command: "opencode run -m openrouter/anthropic/claude-sonnet-4 --auto"
+    enabled: true
+    timeout_seconds: 180
+    allow_parallel: false
+
+  tsla_feed:
+    guest_type: script
+    model_tier: script
+    role_id: equity_data_feed
+    role: "Equity Data Feed — TSLA 行情脚本（证据层）"
+    script_symbol: TSLA
+    command: "python3 scripts/fetch_equity.py TSLA"
+    enabled: true
+    timeout_seconds: 30
+    allow_parallel: true
+
   summarizer:
+    guest_type: llm
+    model_tier: floor
     role: "Meeting Secretary"
     model: "openrouter/nvidia/nemotron-3-nano-30b-a3b:free"
     command: "opencode run -m openrouter/nvidia/nemotron-3-nano-30b-a3b:free --auto"
@@ -73,6 +111,8 @@ guests:
     allow_parallel: false
 
   reporter:
+    guest_type: llm
+    model_tier: anchor
     role_id: report_writer
     role: "Final Report Writer — 仅 stop 时生成 Markdown 报告"
     model: "gpu-llama/qwen3.6-35b"

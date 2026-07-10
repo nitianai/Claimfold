@@ -39,12 +39,14 @@ from runtime_ext import (
     artifact_paths_research,
     build_summary_json,
     compute_metrics,
+    extract_equity_symbols,
     generate_council_experiment_report,
     generate_council_investment_report,
     generate_enhanced_final_md,
     load_full_config,
     max_parallel_from_config,
     metrics_markdown,
+    parse_script_equity_raw,
     read_market_context,
     resolve_guest_alias,
     select_guests_for_focus,
@@ -208,6 +210,54 @@ def is_research_mode(state: dict[str, Any]) -> bool:
 
 def guest_role_id(guests: dict[str, Any], guest_name: str) -> str:
     return guests.get(guest_name, {}).get("role_id", guest_name)
+
+
+def is_script_guest(guest_cfg: dict[str, Any]) -> bool:
+    return guest_cfg.get("guest_type") == "script"
+
+
+def invoke_script(command: str, *, timeout_seconds: int = 60) -> tuple[str, bool]:
+    """Run a script guest command (no stdin). Returns (stdout, success)."""
+    if not command or not command.strip():
+        return "", False
+    if mock_mode_enabled():
+        return "", False
+    parts = shlex.split(command)
+    if not parts or not shutil.which(parts[0]):
+        return "", False
+    try:
+        result = subprocess.run(
+            parts,
+            capture_output=True,
+            text=True,
+            timeout=timeout_seconds,
+            cwd=str(ROOT),
+        )
+        if result.returncode != 0:
+            err = (result.stderr or result.stdout or "script failed").strip()
+            return f"# Script Error\n\n{err}\n", False
+        return (result.stdout or "").strip() + "\n", True
+    except subprocess.TimeoutExpired:
+        return "# Script Error\n\nTimeout\n", False
+    except Exception as exc:
+        return f"# Script Error\n\n{exc}\n", False
+
+
+def fetch_equity_context_block(symbol: str, meeting_dir: Path) -> tuple[str, dict[str, Any]]:
+    script = ROOT / "scripts" / "fetch_equity.py"
+    out_path = meeting_dir / "context" / f"{symbol.lower()}_data.md"
+    json_path = meeting_dir / "context" / f"{symbol.lower()}_data.json"
+    cmd = f"python3 {script} {symbol} --out {out_path} --json {json_path}"
+    body, ok = invoke_script(cmd, timeout_seconds=30)
+    if ok and out_path.exists():
+        body = out_path.read_text(encoding="utf-8").strip()
+    meta: dict[str, Any] = {"symbol": symbol.upper(), "ok": ok}
+    if json_path.exists():
+        try:
+            meta.update(json.loads(json_path.read_text(encoding="utf-8")))
+        except json.JSONDecodeError:
+            pass
+    return body, meta
 
 
 def load_state(meeting_dir: Path) -> dict[str, Any]:
@@ -1150,71 +1200,97 @@ def process_parallel_guest(
     paths = artifact_paths_research(meeting_dir, round_num, guest_name, round_tag)
     guest_cfg = guests.get(guest_name, {})
     timeout = int(guest_cfg.get("timeout_seconds", 180))
+    model_tier = guest_cfg.get("model_tier", "unknown")
 
     try:
         for p in paths.values():
             ensure_no_overwrite(p)
 
         injected_claims = select_claims_for_injection(state, ROOT)
-        prompt = generate_research_prompt(state, guests, guest_name, meeting_dir)
-        paths["prompt"].write_text(prompt, encoding="utf-8")
+        respond_events: list[dict[str, Any]] = []
+        sum_mock = False
 
-        raw_output, raw_mock = invoke_cli(
-            guest_cfg.get("command", ""),
-            prompt,
-            mock_label="guest-cli-missing",
-            round_num=round_num,
-            guest=guest_name,
-            kind="guest",
-            timeout_seconds=timeout,
-        )
-        if raw_mock:
-            raw_output = generate_mock_research_output(
-                guest=guest_name,
-                round_num=round_num,
-                label="mock",
-                state=state,
-                injected_claims=injected_claims,
-            )
-        paths["raw"].write_text(raw_output.strip() + "\n", encoding="utf-8")
-
-        respond_events = []
-        if injected_claims:
-            primary_cid = injected_claims[0].get("claim_id", "")
-            respond_events = parse_claim_responses_from_raw(
-                raw_output,
-                claim_id=primary_cid,
-                guest=guest_name,
+        if is_script_guest(guest_cfg):
+            cmd = guest_cfg.get("command", "")
+            prompt = f"# Script Guest — {guest_name}\n\ncommand: `{cmd}`\n"
+            paths["prompt"].write_text(prompt, encoding="utf-8")
+            raw_output, script_ok = invoke_script(cmd, timeout_seconds=timeout)
+            raw_mock = not script_ok
+            if raw_mock:
+                sym = guest_cfg.get("script_symbol", "TSLA")
+                raw_output = (
+                    f"# Equity Data Feed — {sym}\n\n"
+                    f"> 【数据缺失】脚本未成功执行: `{cmd}`\n"
+                )
+            paths["raw"].write_text(raw_output.strip() + "\n", encoding="utf-8")
+            parsed = parse_script_equity_raw(raw_output)
+            summary_data = build_summary_json(
                 meeting_id=state["meeting_id"],
-                meeting_dir=meeting_dir,
+                round_num=round_num,
+                guest=guest_name,
+                parsed=parsed,
+                raw_text=raw_output,
             )
-            for ev in respond_events:
-                append_event(ROOT, ev)
-            if respond_events:
-                rebuild_index(ROOT)
+        else:
+            prompt = generate_research_prompt(state, guests, guest_name, meeting_dir)
+            paths["prompt"].write_text(prompt, encoding="utf-8")
 
-        summarizer_cfg = guests.get("summarizer", {})
-        sum_timeout = int(summarizer_cfg.get("timeout_seconds", 120))
-        summarizer_prompt = SUMMARIZER_TEMPLATE.read_text(encoding="utf-8")
-        summarizer_prompt += "\n\n---\n\n## Guest 原始输出\n\n" + raw_output
-        summary_body, sum_mock = invoke_cli(
-            summarizer_cfg.get("command", ""),
-            summarizer_prompt,
-            mock_label="summarizer-cli-missing",
-            round_num=round_num,
-            guest=guest_name,
-            kind="summarizer",
-            timeout_seconds=sum_timeout,
-        )
+            raw_output, raw_mock = invoke_cli(
+                guest_cfg.get("command", ""),
+                prompt,
+                mock_label="guest-cli-missing",
+                round_num=round_num,
+                guest=guest_name,
+                kind="guest",
+                timeout_seconds=timeout,
+            )
+            if raw_mock:
+                raw_output = generate_mock_research_output(
+                    guest=guest_name,
+                    round_num=round_num,
+                    label="mock",
+                    state=state,
+                    injected_claims=injected_claims,
+                )
+            paths["raw"].write_text(raw_output.strip() + "\n", encoding="utf-8")
 
-        parsed = parse_summary_sections(summary_body)
-        summary_data = build_summary_json(
-            meeting_id=state["meeting_id"],
-            round_num=round_num,
-            guest=guest_name,
-            parsed=parsed,
-            raw_text=raw_output,
-        )
+            if injected_claims:
+                primary_cid = injected_claims[0].get("claim_id", "")
+                respond_events = parse_claim_responses_from_raw(
+                    raw_output,
+                    claim_id=primary_cid,
+                    guest=guest_name,
+                    meeting_id=state["meeting_id"],
+                    meeting_dir=meeting_dir,
+                )
+                for ev in respond_events:
+                    append_event(ROOT, ev)
+                if respond_events:
+                    rebuild_index(ROOT)
+
+            summarizer_cfg = guests.get("summarizer", {})
+            sum_timeout = int(summarizer_cfg.get("timeout_seconds", 120))
+            summarizer_prompt = SUMMARIZER_TEMPLATE.read_text(encoding="utf-8")
+            summarizer_prompt += "\n\n---\n\n## Guest 原始输出\n\n" + raw_output
+            summary_body, sum_mock = invoke_cli(
+                summarizer_cfg.get("command", ""),
+                summarizer_prompt,
+                mock_label="summarizer-cli-missing",
+                round_num=round_num,
+                guest=guest_name,
+                kind="summarizer",
+                timeout_seconds=sum_timeout,
+            )
+
+            parsed = parse_summary_sections(summary_body)
+            summary_data = build_summary_json(
+                meeting_id=state["meeting_id"],
+                round_num=round_num,
+                guest=guest_name,
+                parsed=parsed,
+                raw_text=raw_output,
+            )
+
         paths["summary_json"].write_text(json.dumps(summary_data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         paths["summary_md"].write_text(summary_json_to_md(summary_data), encoding="utf-8")
 
@@ -1227,6 +1303,8 @@ def process_parallel_guest(
             "used_mock_guest": raw_mock,
             "used_mock_summarizer": sum_mock,
             "claim_responds": len(respond_events),
+            "model_tier": model_tier,
+            "guest_type": guest_cfg.get("guest_type", "llm"),
             "prompt_path": str(paths["prompt"].relative_to(meeting_dir)),
             "raw_output_path": str(paths["raw"].relative_to(meeting_dir)),
             "summary_md_path": str(paths["summary_md"].relative_to(meeting_dir)),
@@ -1918,6 +1996,18 @@ def cmd_context(args: argparse.Namespace) -> None:
     if used_mock or not body.strip():
         body = generate_mock_market_context(scope=scope, topic=state.get("topic", ""), label="mock")
 
+    equity_blocks: list[str] = []
+    equity_meta: list[dict[str, Any]] = []
+    for sym in extract_equity_symbols(scope, state.get("topic", "")):
+        block, meta = fetch_equity_context_block(sym, meeting_dir)
+        if meta.get("status") == "ok" or meta.get("ok"):
+            equity_blocks.append(block.strip())
+            equity_meta.append(meta)
+            print(f"Equity data attached: {sym} → context/{sym.lower()}_data.md")
+
+    if equity_blocks:
+        body = body.strip() + "\n\n---\n\n" + "\n\n---\n\n".join(equity_blocks)
+
     md_path = meeting_dir / "context" / "market_context.md"
     json_path = meeting_dir / "context" / "market_context.json"
     md_path.write_text(body.strip() + "\n", encoding="utf-8")
@@ -1929,6 +2019,7 @@ def cmd_context(args: argparse.Namespace) -> None:
                 "topic": state.get("topic", ""),
                 "date": today,
                 "used_mock": used_mock,
+                "equity_feeds": equity_meta,
                 "body_md": body.strip(),
             },
             ensure_ascii=False,
@@ -1942,14 +2033,16 @@ def cmd_context(args: argparse.Namespace) -> None:
     save_state(meeting_dir, state)
     print(f"Market context saved: {md_path}")
     print(f"JSON index: {json_path}")
-    if used_mock:
+    if used_mock and not equity_blocks:
         print("[MOCK] Context generated offline — verify data before decisions.")
+    elif used_mock and equity_blocks:
+        print("[MOCK] LLM context offline; equity script data attached.")
 
 
 def cmd_report(_: argparse.Namespace) -> None:
     meeting_dir = get_current_meeting_dir()
     state = load_state(meeting_dir)
-    metrics = compute_metrics(meeting_dir, state)
+    metrics = compute_metrics(meeting_dir, state, load_guests())
     inv_path = meeting_dir / "investment_report.md"
     exp_path = meeting_dir / "council_experiment_report.md"
     inv_path.write_text(generate_council_investment_report(state, meeting_dir, metrics), encoding="utf-8")
@@ -1961,7 +2054,7 @@ def cmd_report(_: argparse.Namespace) -> None:
 def cmd_metrics(_: argparse.Namespace) -> None:
     meeting_dir = get_current_meeting_dir()
     state = load_state(meeting_dir)
-    metrics = compute_metrics(meeting_dir, state)
+    metrics = compute_metrics(meeting_dir, state, load_guests())
 
     md_path = meeting_dir / "metrics.md"
     json_path = meeting_dir / "metrics.json"
@@ -2130,7 +2223,7 @@ def finish_meeting(meeting_dir: Path, stop_reason: str = "manual") -> None:
     state["stop_reason"] = stop_reason
     save_state(meeting_dir, state)
 
-    metrics = compute_metrics(meeting_dir, state)
+    metrics = compute_metrics(meeting_dir, state, load_guests())
     (meeting_dir / "metrics.json").write_text(json.dumps(metrics, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     (meeting_dir / "metrics.md").write_text(metrics_markdown(metrics), encoding="utf-8")
 

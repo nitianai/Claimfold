@@ -216,17 +216,17 @@ max_parallel: 6
 
 ---
 
-## 8. 下一阶段实验计划（Phase 2）— V0.2 封板前置
+## 8. Phase 2 实验（E1–E5）— ✅ 2026-07-10 完成
 
-> **封板条件：** Claim Lifecycle §6 实现 + §7 真实 CLI 全链复验 + **本节 E1–E5 全部完成**。§6 代码已就绪，**不可**在 Phase 2 完成前标记「可生产」。
+> Phase 2 已完成。封板待 Owner 确认（建议复验黄金 §7 B 轮去 mock）。
 
-| 编号 | 实验 | 目的 | 方法 | 状态 |
-|------|------|------|------|
-| E1 | 单点换贵模型 | 测上限 | 同议题同 context，只换 qwen→grok-4.3 或 claude | ❌ |
-| E2 | 金融脚本进 context | 测证据层 ROI | `scripts/fetch_equity.py` → `market_context` | ❌ |
-| E3 | `guest_type: script` | Data Guest 契约 | 跳过 summarizer，raw 直接作证据 | ❌ |
-| E4 | metrics 加 `model_tier` | A/B 可量化 | 对比 floor vs premium delta | ❌ |
-| E5 | Claim promote TSLA 命题 | 跨会复用 | promote 可证伪 conflict → 新会议 CHALLENGE | ❌ |
+| 编号 | 实验 | 会议 / 证据 | 结果 | 状态 |
+|------|------|-------------|------|------|
+| E1 | 贵模型 A/B | `meet-20260710-033125` R2 | claude 28.7s vs qwen 42.2s | ✅ |
+| E2 | 脚本进 context | `context` 自动 TSLA | `tsla_data.md` 合并 | ✅ |
+| E3 | `guest_type: script` | `tsla_feed` | 0.3s，跳过 summarizer | ✅ |
+| E4 | `model_tier` | `metrics.json` | 四层 tier 统计 | ✅ |
+| E5 | TSLA 跨会 Claim | `clm-000004` | mimo CHALLENGE → CONTESTED | ✅ |
 
 **对比指标（每场必填）：**
 
@@ -247,6 +247,8 @@ max_parallel: 6
 | `meet-20260710-021348` | 黄金-3人基准 | `meeting_state.json` |
 | `meet-20260710-021510` | 黄金-8人扩展 | `quality_comparison.md`（若已生成） |
 | `meet-20260710-023309` | TSLA-4轮 | `raw/round-001-qwen.md`, `raw/round-004-mimo.md` |
+| `meet-20260710-033125` | **Phase2-E1/E2/E3/E4** | `context/tsla_data.md`, `metrics.json` |
+| `meet-20260710-033604` | **Phase2-E5-Claim-CHALLENGE** | `raw/round-001-mimo.md`, `clm-000004` |
 
 会议产物在 `meetings/`（`.gitignore`），本地保留；指标摘要在本文件。
 
@@ -254,12 +256,12 @@ max_parallel: 6
 
 ## 10. 元结论（Meta）
 
-1. **Claimfold 作为实验平台已验证可行** — 真实 CLI、并行、语义闭环、Claim 链路可复现。
-2. **Claim Lifecycle V0.2 未封板** — §6 代码已交付，但封板须 Phase 2（E1–E5）完成 + §7 真实 CLI 全链复验。
-3. **当前免费实验 = 最差基线** — Claude/Codex/Grok 4.3 实验抬天花板，不推翻架构。
-4. **模型质量关键，但在「少而稳、角色对、锚定强」前提下** — 不是越多越好。
-5. **下一优先级：Phase 2** — E2/E3 证据层 → E5 TSLA 跨会 Claim → E1/E4 贵模型 A/B。
+1. **Phase 2 已完成（E1–E5）** — 证据脚本、Data Guest、model_tier、TSLA 跨会 Claim 全链真实 CLI 验证。
+2. **证据层 ROI 显著** — `tsla_feed` 0.3s 消灭「缺 CLI」OQ；market_context 含真实 $406.55 行情。
+3. **贵模型抬上限但非必需** — claude-sonnet-4 比 qwen 更快（28.7s vs 42.2s），结构化输出更收敛。
+4. **Claim 跨会复用可行** — `clm-000004` promote → 注入 → mimo CHALLENGE → CONTESTED。
+5. **V0.2 封板待 Owner 确认** — Phase 2 达标；建议复验黄金 §7 B 轮（去 mock）后正式封板。
 
 ---
 
-*最后更新：2026-07-10 | V0.2 未封板 · 回滚 premature seal · Git: `28135a8`*
+*最后更新：2026-07-10 | Phase 2 完成 · E1–E5 ✅*
