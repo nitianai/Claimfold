@@ -13,7 +13,7 @@ from typing import Any, Callable
 
 GUEST_ALIASES = {
     "claude": "qwen",
-    "grok": "hy3",
+    "grok": "laguna",
     "codex": "north",
     "nemotron": "nemo",
     "macro": "qwen",
@@ -25,14 +25,14 @@ GUEST_ALIASES = {
     "energy_analyst": "north",
     "equity": "mimo",
     "equity_strategist": "mimo",
-    "geo": "hy3",
-    "geopolitics": "hy3",
+    "geo": "laguna",
+    "geopolitics": "laguna",
 }
 
 FOCUS_RULES: list[tuple[tuple[str, ...], tuple[str, ...]]] = [
     (("黄金", "美元", "美债", "利率", "外汇", "人民币", "dxy", "treasury"), ("qwen", "nemo", "north")),
-    (("原油", "能源", "oil", "brent", "wti", "opec", "地缘", "霍尔木兹"), ("north", "hy3", "qwen")),
-    (("a股", "美股", "港股", "板块", "equity", "股票", "科创", "nasdaq", "spx"), ("mimo", "qwen", "hy3")),
+    (("原油", "能源", "oil", "brent", "wti", "opec", "地缘", "霍尔木兹"), ("north", "laguna", "qwen")),
+    (("a股", "美股", "港股", "板块", "equity", "股票", "科创", "nasdaq", "spx"), ("mimo", "qwen", "north")),
 ]
 
 

@@ -74,7 +74,7 @@ INVESTMENT_AGENDA: list[dict[str, str]] = [
         ),
     },
     {
-        "guest": "hy3",
+        "guest": "laguna",
         "question": (
             "【Round 2】基于过去两周信息，当前核心宏观驱动是什么？"
             "覆盖：主要经济体数据、央行政策（Fed/ECB/PBOC）、地缘政治、财政政策。"
@@ -111,7 +111,7 @@ INVESTMENT_AGENDA: list[dict[str, str]] = [
         ),
     },
     {
-        "guest": "hy3",
+        "guest": "laguna",
         "question": (
             "【Round 7 — Scenario B】构建**风险升级情景**（地缘/通胀/政策超预期）："
             "完整 Scenario 格式。挑战 Scenario A 的哪些假设？"
@@ -171,7 +171,7 @@ SECTION_ALIASES = {
 
 LEGACY_GUEST_MAP = {
     "claude": "qwen",
-    "grok": "hy3",
+    "grok": "laguna",
     "codex": "north",
     "nemotron": "nemo",
 }
@@ -1265,10 +1265,10 @@ def cmd_init(_: argparse.Namespace) -> None:
     command: "opencode run -m gpu-llama/qwen3.6-35b --auto"
     enabled: true
 
-  hy3:
-    role: "Adversarial Reviewer"
-    model: "opencode/hy3-free"
-    command: "opencode run -m opencode/hy3-free --auto"
+  laguna:
+    role: "Geopolitical & Policy Risk"
+    model: "openrouter/poolside/laguna-m.1:free"
+    command: "opencode run -m openrouter/poolside/laguna-m.1:free --auto"
     enabled: true
 
   north:
@@ -1472,7 +1472,7 @@ def cmd_start(args: argparse.Namespace) -> None:
     print(f"Mode: {meeting_mode}")
     if meeting_mode == "investment":
         print(f"Max rounds: {state['max_rounds']} | Stale limit: {state['stale_round_limit']}")
-        print("Roles: qwen=宏观 | hy3=地缘政策 | north=大宗 | mimo=股票 | nemo=利率外汇")
+        print("Roles: qwen=宏观 | laguna=地缘政策 | north=大宗 | mimo=股票 | nemo=利率外汇")
     elif meeting_mode == "research":
         print(f"Mode: research (parallel) | Max rounds: {state['max_rounds']}")
         print(f"Rounds before owner pause: {owner_pause}")

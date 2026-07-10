@@ -39,7 +39,7 @@ cd Claimfold
 ./council.sh init
 ./council.sh start "测试议题：未来一周黄金走势" --mode research
 ./council.sh context "黄金、美元、美债、地缘政治"
-./council.sh select claude grok nemotron    # 别名 → qwen, hy3, nemo
+./council.sh select claude grok nemotron    # 别名 → qwen, laguna, nemo
 ./council.sh run-parallel
 ./council.sh metrics
 ./council.sh audit-summary 1 qwen
@@ -165,7 +165,7 @@ guests:
 - `timeout_seconds` — 单 Guest 超时（默认 180s）
 - `allow_parallel: false` — 该 Guest 降级为串行执行
 
-Guest 别名：`claude→qwen`, `grok→hy3`, `codex→north`, `nemotron→nemo`
+Guest 别名：`claude→qwen`, `grok→laguna`, `codex→north`, `nemotron→nemo`
 
 ## P1：按需点名 selected_guests
 
