@@ -37,22 +37,13 @@ guests:
     timeout_seconds: 180
     allow_parallel: true
 
-  llama70:
-    role_id: llama_generalist
-    role: "Llama 3.3 70B — 多资产推理"
-    model: "openrouter/meta-llama/llama-3.3-70b-instruct:free"
-    command: "opencode run -m openrouter/meta-llama/llama-3.3-70b-instruct:free --auto"
+  gptoss20:
+    role_id: oss_reasoner
+    role: "GPT-OSS 20B — 结构化推理"
+    model: "openrouter/openai/gpt-oss-20b:free"
+    command: "opencode run -m openrouter/openai/gpt-oss-20b:free --auto"
     enabled: true
     timeout_seconds: 180
-    allow_parallel: true
-
-  nemotron120:
-    role_id: nemotron_super
-    role: "Nemotron Super 120B — 深度推理"
-    model: "openrouter/nvidia/nemotron-3-super-120b-a12b:free"
-    command: "opencode run -m openrouter/nvidia/nemotron-3-super-120b-a12b:free --auto"
-    enabled: true
-    timeout_seconds: 240
     allow_parallel: true
 
   laguna:
