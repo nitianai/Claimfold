@@ -30,11 +30,11 @@ guests:
 
   mimo:
     role_id: equity_strategist
-    role: "Equity Strategist — 美股、A股、港股、行业轮动"
-    model: "openrouter/qwen/qwen3-next-80b-a3b-instruct:free"
-    command: "opencode run -m openrouter/qwen3-next-80b-a3b-instruct:free --auto"
+    role: "Equity Strategist — 个股定价、财报、板块β与行业轮动"
+    model: "opencode/deepseek-v4-flash-free"
+    command: "opencode run -m opencode/deepseek-v4-flash-free --auto"
     enabled: true
-    timeout_seconds: 180
+    timeout_seconds: 120
     allow_parallel: true
 
   gptoss20:
