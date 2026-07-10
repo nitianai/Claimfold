@@ -147,7 +147,8 @@ python3 scripts/compare_meetings.py meet-20260710-021348 meet-20260710-021510
 |------|------|------|
 | `opencode/deepseek-v4-flash-free` | <50s | 个股/股票（mimo） |
 | `openrouter/openai/gpt-oss-20b:free` | ~39s | 结构化推理 |
-| `openrouter/nvidia/nemotron-3-nano-30b-a3b:free` | 20–40s | 利率外汇、summarizer |
+| `nvidia/nvidia/nemotron-3-nano-30b-a3b`（NIM） | **~5s** | 利率外汇、summarizer（推荐） |
+| `openrouter/nvidia/nemotron-3-nano-30b-a3b:free` | 20–40s | 备用 |
 | `openrouter/cohere/north-mini-code:free` | ~51s | 大宗 |
 | `openrouter/tencent/hy3:free` | 30–76s | 地缘（已移出默认阵容） |
 | `openrouter/poolside/laguna-m.1:free` | 可用 | 地缘/policy（grok 别名） |

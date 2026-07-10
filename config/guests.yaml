@@ -1,3 +1,4 @@
+# NVIDIA NIM RPM: 大模型 ~40/min，小模型(nano-30b) ~60/min — 当前 4–5 人并行够用
 max_parallel: 6
 
 guests:
@@ -28,10 +29,10 @@ guests:
     model_tier: floor
     role_id: rates_fx_strategist
     role: "Rates & FX Strategist — 美债、美元、人民币、资金流"
-    model: "openrouter/nvidia/nemotron-3-nano-30b-a3b:free"
-    command: "opencode run -m openrouter/nvidia/nemotron-3-nano-30b-a3b:free --auto"
+    model: "nvidia/nvidia/nemotron-3-nano-30b-a3b"
+    command: "opencode run -m nvidia/nvidia/nemotron-3-nano-30b-a3b --auto"
     enabled: true
-    timeout_seconds: 180
+    timeout_seconds: 90
     allow_parallel: true
 
   mimo:
@@ -71,10 +72,10 @@ guests:
     guest_type: llm
     model_tier: floor
     role_id: omni_reasoner
-    role: "Nemotron Omni — 多模态推理"
+    role: "Nemotron Omni — 多模态推理（NIM 易超时，保留 OpenRouter 备用）"
     model: "openrouter/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
     command: "opencode run -m openrouter/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free --auto"
-    enabled: true
+    enabled: false
     timeout_seconds: 180
     allow_parallel: true
 
@@ -104,10 +105,10 @@ guests:
     guest_type: llm
     model_tier: floor
     role: "Meeting Secretary"
-    model: "openrouter/nvidia/nemotron-3-nano-30b-a3b:free"
-    command: "opencode run -m openrouter/nvidia/nemotron-3-nano-30b-a3b:free --auto"
+    model: "nvidia/nvidia/nemotron-3-nano-30b-a3b"
+    command: "opencode run -m nvidia/nvidia/nemotron-3-nano-30b-a3b --auto"
     enabled: true
-    timeout_seconds: 120
+    timeout_seconds: 90
     allow_parallel: false
 
   reporter:
