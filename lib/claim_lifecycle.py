@@ -360,6 +360,7 @@ def parse_claim_responses_from_raw(
 
     patterns = [
         r"claim_id:\s*(clm-\d+)\s*\|\s*response:\s*(\w+)\s*\|\s*statement:\s*(.+)",
+        r"(clm-\d+)\s*[:：]\s*(SUPPORT|CHALLENGE|RETIRE|DEFER)\s*\|\s*statement:\s*(.+)",
         r"(clm-\d+).*?(SUPPORT|CHALLENGE|RETIRE|DEFER)[:：]\s*(.+)",
     ]
     for line in section.splitlines():
