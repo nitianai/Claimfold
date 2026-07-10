@@ -59,13 +59,13 @@ guests:
 
   laguna:
     guest_type: llm
-    model_tier: floor
-    role_id: poolside_analyst
-    role: "Laguna M.1 — 地缘与政策风险"
-    model: "openrouter/poolside/laguna-m.1:free"
-    command: "opencode run -m openrouter/poolside/laguna-m.1:free --auto"
+    model_tier: premium
+    role_id: geopolitics_analyst
+    role: "Grok 4.3 — 地缘与政策风险（共享 context 优先，简洁增量）"
+    model: "hermes-grok/grok-4.3"
+    command: "opencode run -m hermes-grok/grok-4.3 --auto"
     enabled: true
-    timeout_seconds: 180
+    timeout_seconds: 120
     allow_parallel: true
 
   omni:

@@ -151,7 +151,8 @@ python3 scripts/compare_meetings.py meet-20260710-021348 meet-20260710-021510
 | `openrouter/nvidia/nemotron-3-nano-30b-a3b:free` | 20–40s | 备用 |
 | `openrouter/cohere/north-mini-code:free` | ~51s | 大宗 |
 | `openrouter/tencent/hy3:free` | 30–76s | 地缘（已移出默认阵容） |
-| `openrouter/poolside/laguna-m.1:free` | 可用 | 地缘/policy（grok 别名） |
+| `hermes-grok/grok-4.3` | ~17s | 地缘/policy（grok 别名 → laguna） |
+| `openrouter/poolside/laguna-m.1:free` | ~16s | 备用（已被 grok-4.3 取代） |
 
 ### C 级（实验禁用 — 易超时 Mock）
 
