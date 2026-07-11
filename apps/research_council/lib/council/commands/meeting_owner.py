@@ -8,6 +8,7 @@ from council.formatting import format_guest_summaries, format_list
 from council.guests import is_json_mode
 from council.lifecycle import finish_meeting
 from council.meeting_helpers import stop_suggestions
+from council.slots import apply_guest_slots_projection, format_guest_slots_summary
 from council.state_store import get_current_meeting_dir, load_state, save_state
 
 
@@ -51,6 +52,13 @@ def cmd_summary(_: argparse.Namespace) -> None:
 def cmd_status(_: argparse.Namespace) -> None:
     meeting_dir = get_current_meeting_dir()
     state = load_state(meeting_dir)
+    apply_guest_slots_projection(meeting_dir, state)
+    slots = state.get("guest_slots") or {}
+    print(f"# Meeting Status — {state.get('meeting_id', meeting_dir.name)}\n")
+    print(f"round={state.get('round', 0)}  status={state.get('status', '')}  owner_required={state.get('owner_required', False)}")
+    print("\n## Guest Slots")
+    print(format_guest_slots_summary(slots))
+    print("\n## State JSON")
     print(json.dumps(state, ensure_ascii=False, indent=2))
 
 

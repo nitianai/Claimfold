@@ -37,6 +37,7 @@ from council.formatting import round_tag
 from council.guests import guest_roster, is_script_guest, load_guests_for_meeting
 from council.mock import generate_mock_research_output
 from council.parsers import parse_summary_sections, run_summarizer_for_guest
+from council.slots import apply_guest_slots_projection, begin_guest_slot, finalize_guest_slot
 from council.state_store import load_state, save_state
 
 from council.meeting_helpers import (
@@ -235,7 +236,8 @@ def run_one_parallel_round(meeting_dir: Path, *, quiet: bool = False) -> str | N
     )
 
     def run_guest(guest_name: str) -> dict[str, Any]:
-        return process_parallel_guest(
+        attempts = begin_guest_slot(event_log, round_num=round_num, guest_id=guest_name)
+        entry = process_parallel_guest(
             meeting_dir=meeting_dir,
             state=state,
             guests=guests,
@@ -243,6 +245,14 @@ def run_one_parallel_round(meeting_dir: Path, *, quiet: bool = False) -> str | N
             round_num=round_num,
             snapshot=snapshot,
         )
+        finalize_guest_slot(
+            event_log,
+            round_num=round_num,
+            guest_id=guest_name,
+            entry=entry,
+            attempts=attempts,
+        )
+        return entry
 
     if parallel_batch:
         with ThreadPoolExecutor(max_workers=min(max_workers, len(parallel_batch))) as pool:
@@ -325,6 +335,7 @@ def run_one_parallel_round(meeting_dir: Path, *, quiet: bool = False) -> str | N
         state["owner_required"] = True
 
     update_stop_recommendation(state)
+    apply_guest_slots_projection(meeting_dir, state)
     save_state(meeting_dir, state)
 
     success_count = sum(1 for e in entries if e.get("success"))

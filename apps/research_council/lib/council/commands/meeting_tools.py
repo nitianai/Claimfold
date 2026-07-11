@@ -11,6 +11,7 @@ from council.adapters.session_adapter import artifact_paths_research
 from council.config import LEGACY_GUEST_MAP
 from council.formatting import artifact_paths, round_tag
 from council.guests import is_json_mode, is_research_mode
+from council.slots import format_guest_slots_summary, repair_guest_slots_from_artifacts
 from council.state_store import (
     get_current_meeting_dir,
     load_state,
@@ -19,6 +20,15 @@ from council.state_store import (
     save_state,
 )
 from missionos.utils import validate_meeting_id
+
+
+def cmd_repair_slots(_: argparse.Namespace) -> None:
+    meeting_dir = get_current_meeting_dir()
+    state = load_state(meeting_dir)
+    slots = repair_guest_slots_from_artifacts(meeting_dir, state)
+    save_state(meeting_dir, state)
+    print(f"Repaired guest_slots for: {state['meeting_id']}")
+    print(format_guest_slots_summary(slots))
 
 
 def cmd_repair_state(_: argparse.Namespace) -> None:

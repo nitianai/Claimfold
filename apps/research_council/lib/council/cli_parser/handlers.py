@@ -22,7 +22,7 @@ from council.commands.meeting_run import (
 from council.commands.floor_cmd import cmd_floor
 from council.commands.session_cmd import cmd_session
 from council.commands.meeting_start import cmd_start
-from council.commands.meeting_tools import cmd_audit_summary, cmd_repair_state, cmd_tui
+from council.commands.meeting_tools import cmd_audit_summary, cmd_repair_slots, cmd_repair_state, cmd_tui
 from council.commands.web_cmd import cmd_web
 from council.commands.reports import cmd_metrics, cmd_report
 
@@ -51,6 +51,7 @@ def get_handlers():
         "report": cmd_report,
         "audit-summary": cmd_audit_summary,
         "repair-state": cmd_repair_state,
+        "repair-slots": cmd_repair_slots,
         "tui": cmd_tui,
         "web": cmd_web,
         "claim": cmd_claim,

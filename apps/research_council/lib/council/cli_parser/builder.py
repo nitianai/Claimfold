@@ -171,6 +171,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_audit.add_argument("guest", help="Guest name (e.g. qwen)")
 
     sub.add_parser("repair-state", help="Migrate legacy guest names and rebuild state from summaries")
+    sub.add_parser("repair-slots", help="Rebuild guest_slots projection from events or artifacts")
     sub.add_parser("tui", help="Optional tmux-based TUI")
 
     p_web = sub.add_parser("web", help="Start chat-room web UI (default http://127.0.0.1:8787)")

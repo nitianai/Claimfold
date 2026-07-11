@@ -67,6 +67,7 @@ from council.parsers.summary_json import (
 from council.parsers import parse_summary_sections, run_summarizer_for_guest
 from council.prompts import generate_research_prompt, resolve_selected_guests
 from council.selection import load_full_config
+from council.slots import apply_guest_slots_projection, begin_guest_slot, finalize_guest_slot
 from council.state_store import load_state, save_state
 from council.verify import verify_research_semantic_loop
 from missionos.utils import clamp_int, utc_now
@@ -474,6 +475,7 @@ def run_interactive_turn(meeting_dir: Path, *, quiet: bool = False) -> tuple[str
     if not quiet:
         print(f"  Turn {turn}: {guest} speaking…")
 
+    attempts = begin_guest_slot(event_log, round_num=round_num, guest_id=guest)
     entry = process_interactive_guest(
         meeting_dir=meeting_dir,
         state=state,
@@ -483,6 +485,14 @@ def run_interactive_turn(meeting_dir: Path, *, quiet: bool = False) -> tuple[str
         snapshot=snapshot,
         prior_messages=prior,
     )
+    finalize_guest_slot(
+        event_log,
+        round_num=round_num,
+        guest_id=guest,
+        entry=entry,
+        attempts=attempts,
+    )
+    apply_guest_slots_projection(meeting_dir, state)
 
     message_id = _commit_session_message(
         state, guest=guest, turn=turn, entry=entry, reply_to=reply_to
