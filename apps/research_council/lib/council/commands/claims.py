@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from council.claims import (
-    append_event,
+    append_claim_event,
     append_promote_event,
     compute_fingerprint,
     load_index,
@@ -121,7 +121,7 @@ def cmd_claim_retire(args: argparse.Namespace) -> None:
         "actor": "owner",
         "ts": utc_now(),
     }
-    append_event(DATA_ROOT, event)
+    append_claim_event(DATA_ROOT, event)
     index_data = rebuild_index(DATA_ROOT)
     view = index_data.get("claims", {}).get(claim_id, {})
     print(f"Retired {claim_id} → {view.get('status', 'RETIRED')}")

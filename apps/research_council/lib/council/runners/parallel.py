@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from council.claims import (
-    append_event,
+    append_claim_event,
     parse_claim_responses_from_raw,
     rebuild_index,
 )
@@ -261,7 +261,7 @@ def run_one_parallel_round(meeting_dir: Path, *, quiet: bool = False) -> str | N
         pending_claim_events.extend(entry.get("respond_events", []))
     if pending_claim_events:
         for ev in pending_claim_events:
-            append_event(DATA_ROOT, ev)
+            append_claim_event(DATA_ROOT, ev)
             publish_claim_responded(event_log, ev)
         rebuild_index(DATA_ROOT)
 

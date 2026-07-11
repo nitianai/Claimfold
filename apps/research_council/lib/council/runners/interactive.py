@@ -16,7 +16,7 @@ from council.adapters.meeting_events import (
 )
 from council.adapters.session_adapter import artifact_paths_research
 from council.claims import (
-    append_event,
+    append_claim_event,
     parse_claim_responses_from_raw,
     rebuild_index,
 )
@@ -505,7 +505,7 @@ def run_interactive_turn(meeting_dir: Path, *, quiet: bool = False) -> tuple[str
         for ev in pending_claim_events:
             if not ev.get("guest"):
                 ev = {**ev, "guest": guest}
-            append_event(DATA_ROOT, ev)
+            append_claim_event(DATA_ROOT, ev)
             publish_claim_responded(event_log, ev)
         rebuild_index(DATA_ROOT)
 

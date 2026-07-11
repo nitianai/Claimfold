@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from council.claims.stream_isolation import assert_meeting_event_type
 from missionos.session.events import append_session_event, load_session_events
 from missionos.utils import utc_now
 
@@ -19,6 +20,7 @@ class MeetingEventLog:
         self.meeting_id = meeting_id
 
     def append(self, event_type: str, **payload: Any) -> None:
+        assert_meeting_event_type(event_type)
         event = {
             "schema_version": MEETING_EVENT_SCHEMA,
             "event": event_type,

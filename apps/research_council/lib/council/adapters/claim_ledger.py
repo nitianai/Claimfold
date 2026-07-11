@@ -9,7 +9,9 @@ import re
 from pathlib import Path
 from typing import Any
 
+from council.claims.stream_isolation import assert_claim_ledger_event_type
 from missionos.ledger.store import (
+    append_event,
     claims_dir,
     ensure_claims_dir,
     ledger_path,
@@ -70,7 +72,13 @@ def next_claim_id(root: Path) -> str:
         f.close()
 
 
+def append_claim_event(root: Path, event: dict[str, Any]) -> None:
+    assert_claim_ledger_event_type(str(event.get("event", "")))
+    append_event(root, event)
+
+
 def append_promote_event(root: Path, event: dict[str, Any]) -> str:
+    assert_claim_ledger_event_type(str(event.get("event", "PROMOTE")))
     f = with_ledger_lock(root)
     try:
         f.seek(0)
