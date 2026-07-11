@@ -8,6 +8,8 @@ from council.formatting import format_guest_summaries, format_list
 from council.guests import is_json_mode
 from council.lifecycle import finish_meeting
 from council.meeting_helpers import stop_suggestions
+from council.adapters.meeting_events import meeting_event_log
+from council.hitl import apply_hitl_projection, resolve_owner_interrupt
 from council.slots import apply_guest_slots_projection, format_guest_slots_summary
 from council.state_store import get_current_meeting_dir, load_state, save_state
 
@@ -53,9 +55,18 @@ def cmd_status(_: argparse.Namespace) -> None:
     meeting_dir = get_current_meeting_dir()
     state = load_state(meeting_dir)
     apply_guest_slots_projection(meeting_dir, state)
+    hitl = apply_hitl_projection(meeting_dir, state)
     slots = state.get("guest_slots") or {}
     print(f"# Meeting Status — {state.get('meeting_id', meeting_dir.name)}\n")
     print(f"round={state.get('round', 0)}  status={state.get('status', '')}  owner_required={state.get('owner_required', False)}")
+    print(f"failure_policy={state.get('failure_policy', 'allow_partial')}")
+    if hitl.get("open"):
+        print(f"hitl=OPEN reason={hitl.get('reason', '')} round={hitl.get('round', 0)}")
+    elif hitl.get("last_resolved_action"):
+        print(f"hitl=resolved action={hitl.get('last_resolved_action')}")
+    partial = state.get("partial_warnings") or []
+    if partial:
+        print(f"partial_warnings={len(partial)}")
     print("\n## Guest Slots")
     print(format_guest_slots_summary(slots))
     print("\n## State JSON")
@@ -67,7 +78,8 @@ def cmd_continue(_: argparse.Namespace) -> None:
     state = load_state(meeting_dir)
     if state.get("status") == "stopped":
         raise SystemExit("Meeting already stopped.")
-    state["owner_required"] = False
+    event_log = meeting_event_log(meeting_dir, state.get("meeting_id", meeting_dir.name))
+    resolve_owner_interrupt(event_log, state, action="continue")
     state["guest_turns_since_owner"] = 0
     state["rounds_since_owner"] = 0
     state["status"] = "running"

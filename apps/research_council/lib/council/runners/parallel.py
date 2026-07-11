@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import json
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
 
@@ -37,7 +36,20 @@ from council.formatting import round_tag
 from council.guests import guest_roster, is_script_guest, load_guests_for_meeting
 from council.mock import generate_mock_research_output
 from council.parsers import parse_summary_sections, run_summarizer_for_guest
-from council.slots import apply_guest_slots_projection, begin_guest_slot, finalize_guest_slot
+from council.failure_policy import (
+    apply_failure_policy_after_round,
+    owner_pause_reason,
+    resolve_failure_policy,
+    run_round_guests,
+    skip_guest_entry,
+)
+from council.hitl import publish_owner_interrupt_raised
+from council.slots import (
+    apply_guest_slots_projection,
+    begin_guest_slot,
+    finalize_guest_slot,
+    skip_guest_slot,
+)
 from council.state_store import load_state, save_state
 
 from council.meeting_helpers import (
@@ -254,17 +266,32 @@ def run_one_parallel_round(meeting_dir: Path, *, quiet: bool = False) -> str | N
         )
         return entry
 
-    if parallel_batch:
-        with ThreadPoolExecutor(max_workers=min(max_workers, len(parallel_batch))) as pool:
-            futures = {pool.submit(run_guest, g): g for g in parallel_batch}
-            for fut in as_completed(futures):
-                entries.append(fut.result())
-    for guest_name in serial_batch:
-        entries.append(run_guest(guest_name))
+    policy = resolve_failure_policy(state)
 
-    entries.sort(key=lambda e: selected.index(e["guest"]) if e["guest"] in selected else 999)
+    def skip_guest(guest_name: str, reason: str) -> dict[str, Any]:
+        skip_guest_slot(
+            event_log,
+            round_num=round_num,
+            guest_id=guest_name,
+            reason=reason,
+        )
+        return skip_guest_entry(guest_name, reason=reason)
 
-    require_parallel_success(entries, quiet=quiet)
+    entries = run_round_guests(
+        policy=policy,
+        selected=selected,
+        parallel_batch=parallel_batch,
+        serial_batch=serial_batch,
+        max_workers=max_workers,
+        run_guest=run_guest,
+        skip_guest=skip_guest,
+    )
+
+    success_count_pre = sum(1 for e in entries if e.get("success"))
+    if success_count_pre == 0 and policy != "fail_fast":
+        require_parallel_success(entries, quiet=quiet)
+    elif success_count_pre == 0 and not quiet:
+        print("✗ 本轮全部失败或跳过（fail_fast）— 仍写入 guest_slots 与 state")
 
     pending_claim_events: list[dict[str, Any]] = []
     for entry in entries:
@@ -331,8 +358,26 @@ def run_one_parallel_round(meeting_dir: Path, *, quiet: bool = False) -> str | N
         }
     )
 
-    if state["rounds_since_owner"] >= state.get("max_round_before_owner", 3):
+    interrupt_reason = apply_failure_policy_after_round(
+        state,
+        entries=entries,
+        policy=policy,
+        round_num=round_num,
+    )
+    pause_reason = owner_pause_reason(state)
+    if pause_reason:
         state["owner_required"] = True
+        interrupt_reason = interrupt_reason or pause_reason
+
+    if interrupt_reason:
+        publish_owner_interrupt_raised(
+            event_log,
+            round_num=round_num,
+            reason=interrupt_reason,
+        )
+        hitl = dict(state.get("hitl") or {})
+        hitl.update({"open": True, "reason": interrupt_reason, "round": round_num})
+        state["hitl"] = hitl
 
     update_stop_recommendation(state)
     apply_guest_slots_projection(meeting_dir, state)

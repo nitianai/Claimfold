@@ -24,6 +24,7 @@ from council.plan import (
 )
 from council.adapters.plan_runtime import build_plan_actor_queue
 from council.adapters.meeting_events import meeting_event_log, publish_meeting_started
+from council.failure_policy import DEFAULT_FAILURE_POLICY, FAILURE_POLICIES, default_hitl_config
 from council.state_store import save_state
 
 
@@ -48,6 +49,7 @@ def _scenario_start_state(
     max_rounds: int,
     stale_limit: int,
     roster: list[str],
+    failure_policy: str = DEFAULT_FAILURE_POLICY,
 ) -> dict[str, Any]:
     first_role_id, first_executor_id = first_stage_binding(plan)
     try:
@@ -94,6 +96,9 @@ def _scenario_start_state(
         "challenges": [],
         "verifications": [],
         "round_records": [],
+        "failure_policy": failure_policy,
+        "partial_warnings": [],
+        "hitl": default_hitl_config(owner_pause),
     }
 
 
@@ -107,6 +112,7 @@ def _legacy_start_state(
     max_rounds: int,
     stale_limit: int,
     roster: list[str],
+    failure_policy: str = DEFAULT_FAILURE_POLICY,
 ) -> dict[str, Any]:
     output_format = "json"
     round_mode = "serial"
@@ -148,6 +154,9 @@ def _legacy_start_state(
         "challenges": [],
         "verifications": [],
         "round_records": [],
+        "failure_policy": failure_policy,
+        "partial_warnings": [],
+        "hitl": default_hitl_config(owner_pause),
     }
     if meeting_mode == "investment":
         state["round_agenda"] = INVESTMENT_AGENDA
@@ -180,6 +189,12 @@ def cmd_start(args: argparse.Namespace) -> None:
         raise SystemExit("--rounds-before-owner must be >= 1")
 
     stale_limit = getattr(args, "stale_limit", 5)
+    failure_policy = getattr(args, "failure_policy", DEFAULT_FAILURE_POLICY) or DEFAULT_FAILURE_POLICY
+    if failure_policy not in FAILURE_POLICIES:
+        raise SystemExit(
+            f"Invalid --failure-policy: {failure_policy} "
+            f"(allowed: {', '.join(sorted(FAILURE_POLICIES))})"
+        )
     scenario = getattr(args, "scenario", None)
     plan: dict[str, Any] | None = None
     termination: dict[str, Any] = {}
@@ -233,6 +248,7 @@ def cmd_start(args: argparse.Namespace) -> None:
             max_rounds=max_rounds,
             stale_limit=stale_limit,
             roster=roster,
+            failure_policy=failure_policy,
         )
     else:
         guests = load_guests()
@@ -248,6 +264,7 @@ def cmd_start(args: argparse.Namespace) -> None:
             max_rounds=max_rounds,
             stale_limit=stale_limit,
             roster=roster,
+            failure_policy=failure_policy,
         )
 
     save_state(meeting_dir, state)

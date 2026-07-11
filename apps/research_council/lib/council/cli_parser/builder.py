@@ -26,6 +26,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Guest turns before owner pause (default: 3)",
     )
     p_start.add_argument(
+        "--failure-policy",
+        choices=["allow_partial", "all_must_succeed", "fail_fast"],
+        default="allow_partial",
+        help="Guest failure handling: allow_partial | all_must_succeed | fail_fast",
+    )
+    p_start.add_argument(
         "--mode",
         choices=["standard", "investment", "research", "interactive"],
         default="standard",

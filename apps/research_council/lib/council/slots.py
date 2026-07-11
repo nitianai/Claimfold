@@ -91,6 +91,25 @@ def begin_guest_slot(
     return attempts
 
 
+def skip_guest_slot(
+    log: MeetingEventLog,
+    *,
+    round_num: int,
+    guest_id: str,
+    reason: str,
+    max_retries: int = DEFAULT_MAX_RETRIES,
+) -> None:
+    publish_guest_slot_updated(
+        log,
+        round_num=round_num,
+        guest_id=guest_id,
+        phase="Skipped",
+        attempts=0,
+        max_retries=max_retries,
+        message=reason,
+    )
+
+
 def finalize_guest_slot(
     log: MeetingEventLog,
     *,
