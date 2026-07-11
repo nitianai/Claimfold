@@ -1,0 +1,7 @@
+# Plan Executor（执行器）→ Guest（嘉宾）roster 映射（legacy runner 用）
+mappings:
+  qwen_local: qwen
+  claude: claude_sonnet
+  grok: laguna
+  codex: codex
+  qoder: qoder

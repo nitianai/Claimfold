@@ -1,0 +1,15 @@
+[Unit]
+Description=Claimfold Council session watcher
+After=network.target
+
+[Service]
+Type=simple
+User=claimfold
+WorkingDirectory=/path/to/Claimfold
+Environment=COUNCIL_DATA_ROOT=/path/to/Claimfold
+ExecStart=/path/to/Claimfold/scripts/council-daemon.sh watch --interval 30
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

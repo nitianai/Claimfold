@@ -1,0 +1,8 @@
+# Focus Rules（焦点规则）— select_guests_for_focus 关键词 → 优先嘉宾
+rules:
+  - keywords: [黄金, 美元, 美债, 利率, 外汇, 人民币, dxy, treasury]
+    preferred: [qwen, nemo, north]
+  - keywords: [原油, 能源, oil, brent, wti, opec, 地缘, 霍尔木兹]
+    preferred: [north, laguna, qwen]
+  - keywords: [a股, 美股, 港股, 板块, equity, 股票, 科创, nasdaq, spx]
+    preferred: [mimo, qwen, north]

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Claimfold · AI 网络会议室</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="ambient" aria-hidden="true">
+    <div class="ambient-orb ambient-orb-a"></div>
+    <div class="ambient-orb ambient-orb-b"></div>
+    <div class="ambient-grid"></div>
+  </div>
+
+  <main class="app-shell">
+    <aside class="left-rail panel glass" aria-label="会议配置">
+      <div class="rail-brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7h16M4 12h10M4 17h14"/></svg>
+        </div>
+        <div>
+          <p class="rail-brand-name">Claimfold</p>
+          <p class="rail-brand-sub">AI Council</p>
+        </div>
+      </div>
+
+      <section class="section">
+        <div class="section-head">
+          <h2>议题</h2>
+          <button class="icon-btn" id="btn-add-agenda" title="发布议题" aria-label="发布议题">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </div>
+        <div class="field">
+          <label for="topic-input">发布新议题</label>
+          <input id="topic-input" placeholder="下季度资产配置是否应提高防御性仓位？" />
+        </div>
+        <div class="field">
+          <label for="scope-input">上下文范围</label>
+          <input id="scope-input" placeholder="黄金、美元指数、美债收益率" />
+        </div>
+        <div class="agenda-list" id="meeting-list"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <h2>会议设置</h2>
+          <span class="muted" id="meeting-type-label">投资研讨会</span>
+        </div>
+        <div class="field">
+          <label for="meeting-mode">会议类型</label>
+          <select id="meeting-mode">
+            <option value="interactive">投资研讨会（交互话轮）</option>
+            <option value="research">并行研究会议</option>
+          </select>
+        </div>
+        <label class="check-row">
+          <input type="checkbox" id="chk-run-context" checked />
+          <span>创建后自动生成共享上下文</span>
+        </label>
+        <div class="button-stack">
+          <button class="primary glow" id="open-invite-modal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M15 10l4.55-2.27A1 1 0 0 1 21 8.62v6.76a1 1 0 0 1-1.45.89L15 14"/><rect x="3" y="6" width="12" height="12" rx="2"/></svg>
+            邀请已有角色
+          </button>
+          <button class="ghost" id="open-agent-modal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+            创建智能体角色卡
+          </button>
+        </div>
+        <div class="invited-chips" id="invited-chips"></div>
+      </section>
+
+      <section class="section" id="task-panel" hidden>
+        <div class="task-indicator">
+          <span class="pulse"></span>
+          <span id="task-text">运行中…</span>
+        </div>
+      </section>
+    </aside>
+
+    <section class="meeting-main panel glass" aria-label="会议主区域">
+      <header class="topbar">
+        <div class="title-cluster">
+          <div class="title-text">
+            <p class="eyebrow">Live Council</p>
+            <h1>AI 网络会议室</h1>
+            <p class="muted subtitle">人类主持 · 多模型嘉宾 · 实时观点沉淀</p>
+          </div>
+        </div>
+        <div class="status-row">
+          <span class="pill" id="pill-status"><span class="dot idle"></span>未开始</span>
+          <span class="pill" id="pill-guests">0 位 AI 嘉宾在线</span>
+          <span class="pill">主持人：我</span>
+        </div>
+      </header>
+
+      <div class="stage">
+        <article class="topic-card hero-card">
+          <div class="topic-copy">
+            <p class="eyebrow">当前议题</p>
+            <h2 id="active-topic">选择或发布议题</h2>
+            <p class="muted" id="meeting-context">会议类型与共享上下文将显示在这里</p>
+          </div>
+          <div class="topic-actions">
+            <button class="primary glow" id="btn-run-interactive">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+              轮流发言
+            </button>
+            <button class="ghost" id="btn-run-parallel">并行讨论</button>
+            <button class="ghost" id="btn-context">上下文</button>
+            <button id="btn-continue" hidden>继续</button>
+            <button id="btn-stop" class="danger">结束</button>
+          </div>
+        </article>
+        <div class="speaker-strip" id="speaker-strip"></div>
+        <div class="chat-log" id="chat-log" aria-live="polite"></div>
+      </div>
+
+      <form class="composer" id="composer-form">
+        <div class="field composer-field">
+          <label for="message-input">我的发言</label>
+          <textarea id="message-input" placeholder="输入你的观点、追问或主持指令…"></textarea>
+        </div>
+        <button class="primary composer-send" type="submit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+          发言
+        </button>
+      </form>
+    </section>
+
+    <aside class="right-rail" aria-label="会议看板">
+      <section class="panel section glass">
+        <div class="section-head">
+          <h2>在线嘉宾</h2>
+          <span class="muted">发言者点亮</span>
+        </div>
+        <div class="guest-list" id="online-list"></div>
+      </section>
+      <section class="panel section glass">
+        <div class="section-head">
+          <h2>总结看板</h2>
+          <button class="icon-btn" id="btn-refresh-board" aria-label="刷新">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+          </button>
+        </div>
+        <div class="summary-list" id="summary-list"></div>
+      </section>
+      <section class="panel section glass">
+        <div class="section-head">
+          <h2>会议沉淀</h2>
+          <span class="muted">决策草案</span>
+        </div>
+        <div class="decision-box" id="decision-box"></div>
+      </section>
+    </aside>
+  </main>
+
+  <!-- 创建/编辑角色卡 -->
+  <div class="modal-backdrop" id="agent-modal" role="dialog" aria-modal="true">
+    <div class="modal glass">
+      <div class="modal-head">
+        <h2 id="agent-modal-title">智能体角色卡</h2>
+        <button class="icon-btn" id="close-agent-modal" aria-label="关闭">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="agent-edit-id" value="" />
+        <div class="form-grid">
+          <div class="field">
+            <label for="agent-name">角色名称</label>
+            <input id="agent-name" placeholder="逆向风险官" />
+          </div>
+          <div class="field">
+            <label for="agent-executor">调用模型</label>
+            <select id="agent-executor"></select>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label for="agent-style">性格</label>
+            <select id="agent-style"></select>
+          </div>
+          <div class="field">
+            <label for="agent-domain">专业身份</label>
+            <select id="agent-domain"></select>
+          </div>
+        </div>
+        <details class="field-advanced">
+          <summary>高级设置</summary>
+          <div class="field">
+            <label for="agent-model">模型标识（可覆盖）</label>
+            <input id="agent-model" placeholder="自动填充，可手动修改" />
+          </div>
+          <div class="field">
+            <label for="agent-base-guest">底层嘉宾</label>
+            <select id="agent-base-guest"></select>
+          </div>
+        </details>
+        <div class="field">
+          <label for="agent-rules">发言规则</label>
+          <textarea id="agent-rules" rows="3">必须先给判断，再给证据、风险、反证条件和退出信号。</textarea>
+        </div>
+        <div class="field">
+          <label for="agent-memory">角色背景与偏好</label>
+          <textarea id="agent-memory" rows="3" placeholder="长期偏保守，优先保护本金…"></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" id="cancel-agent">取消</button>
+        <button type="button" class="danger" id="delete-agent" hidden>删除</button>
+        <button type="button" class="primary" id="save-agent">保存并加入会议</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 邀请已有角色 -->
+  <div class="modal-backdrop" id="invite-modal" role="dialog" aria-modal="true">
+    <div class="modal modal-wide glass">
+      <div class="modal-head">
+        <h2>邀请已有角色</h2>
+        <button class="icon-btn" id="close-invite-modal" aria-label="关闭">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label for="agent-search">搜索角色库</label>
+          <input id="agent-search" placeholder="按角色名称、模型或专业身份筛选…" />
+        </div>
+        <div class="filter-chips" id="domain-filters" aria-label="按专业身份筛选"></div>
+        <div class="library-list" id="agent-library-list"></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" id="cancel-invite">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+  <script src="/app.js"></script>
+</body>
+</html>

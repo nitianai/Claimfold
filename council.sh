@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-# Council Engine V0.1 — deterministic multi-model meeting workflow runtime.
-# Engine does NOT reason. Guests reason. Summarizer compresses. Owner controls.
+# Claimfold CLI 转发 — App 位于 apps/research_council/
 set -euo pipefail
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-exec python3 "${SCRIPT_DIR}/lib/engine.py" "$@"
+exec "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/apps/research_council/council.sh" "$@"

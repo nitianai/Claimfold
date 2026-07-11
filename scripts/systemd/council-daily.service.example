@@ -1,0 +1,12 @@
+[Unit]
+Description=Claimfold Council 14:30 daily run
+After=network.target
+
+[Service]
+Type=oneshot
+User=claimfold
+WorkingDirectory=/path/to/Claimfold
+Environment=COUNCIL_DATA_ROOT=/path/to/Claimfold
+Environment=COUNCIL_DAILY_SCOPE=TSLA、VIX、美债
+Environment=COUNCIL_MOCK=0
+ExecStart=/path/to/Claimfold/scripts/council-daemon.sh daily

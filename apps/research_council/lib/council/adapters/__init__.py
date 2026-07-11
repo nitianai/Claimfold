@@ -1,0 +1,1 @@
+"""App Adapter（应用适配器）层 — 连接 missionos Platform 与 Council 领域逻辑。"""

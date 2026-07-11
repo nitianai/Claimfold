@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "missionos"
+version = "0.1.0"
+description = "Mission OS — minimal auditable workflow platform for Claimfold apps"
+requires-python = ">=3.10"
+dependencies = ["PyYAML>=6.0", "jsonschema>=4.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["missionos*"]
+
+[tool.setuptools.package-data]
+missionos = ["schemas/*.json"]

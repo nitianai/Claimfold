@@ -112,43 +112,30 @@ COUNCIL_MOCK=1 ./council.sh run-parallel
 
 ## 目录结构
 
-详见 [`docs/STRUCTURE.md`](docs/STRUCTURE.md)。概要：
+详见 [`docs/STRUCTURE.md`](docs/STRUCTURE.md)。概要（Platform / App 拆分后）：
 
 ```
 Claimfold/
-  council.sh
-  config/guests.yaml
-  lib/                    # 运行时
-  scripts/                # 实验对比、数据拉取
-  prompts/
-    guest/                # research, json, investment, template
-    system/               # summarizer, market_context
-    reports/              # 投资/实验报告模板
-  docs/
-    EXPERIMENTS.md        # 实验记录（项目初心）
-    CLAIM_LIFECYCLE.md
-  claims/                 # 跨会话主张账本
-  meetings/<meeting_id>/
+  council.sh                          # 转发至 apps/research_council/
+  platform/missionos/                 # Platform（平台层）纯核
+  apps/research_council/
+    config/guests.yaml                # 嘉宾配置
+    config/focus_rules.yaml           # 焦点 → 嘉宾规则
+    lib/                              # App 运行时
+    prompts/ / scenarios/ / scripts/
+  claims/                             # 跨会话主张账本（仓库根）
+  meetings/<meeting_id>/              # 会议产物（仓库根）
     meeting_state.json
     context/market_context.md
-    context/market_context.json
-    prompts/round-001-qwen.prompt.md
-    raw/round-001-qwen.md
-    summaries/round-001-qwen.summary.md
-    summaries/round-001-qwen.summary.json
-    errors/round-001-qwen.error.md      # 仅失败时
-    metrics.md
-    metrics.json
-    final.md
-    investment_report.md          # Council Investment Report（十节）
-    council_experiment_report.md  # Council Experiment Report
+    prompts/ raw/ summaries/ errors/
+    metrics.md  final.md
 ```
 
 实验工具：
 
 ```bash
-python3 scripts/compare_meetings.py meet-20260710-021348 meet-20260710-021510
-python3 scripts/fetch_equity.py TSLA --out meetings/<id>/context/tsla_data.md
+python3 apps/research_council/scripts/compare_meetings.py meet-20260710-021348 meet-20260710-021510
+python3 apps/research_council/scripts/fetch_equity.py TSLA --out meetings/<id>/context/tsla_data.md
 ```
 
 ## 配置（guests.yaml）

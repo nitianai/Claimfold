@@ -1,0 +1,23 @@
+# Guest（嘉宾）别名 — 启动前配置，供 resolve_guest_alias 使用
+aliases:
+  claude: qwen
+  grok: laguna
+  codex: codex
+  qoder: qoder
+  logic: codex
+  auditor: codex
+  nemotron: nemo
+  macro: qwen
+  macro_strategist: qwen
+  fx: nemo
+  rates_fx_strategist: nemo
+  commodity: north
+  energy: north
+  energy_analyst: north
+  equity: mimo
+  equity_strategist: mimo
+  equity_feed: tsla_feed
+  data_feed: tsla_feed
+  tsla: tsla_feed
+  geo: laguna
+  geopolitics: laguna
