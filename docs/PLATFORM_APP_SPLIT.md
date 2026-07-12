@@ -1,6 +1,6 @@
 # Claimfold Platform（平台层）/ App（应用层）拆分方案
 
-> **状态：** Phase 4（阶段 4）已交付（shim 销毁 + `focus_rules` / `executor-guest` 配置化）；Platform / App 拆分完成
+> **状态：** Phase 0–4 ✅ 已交付；**Phase 5（平台硬化）** 执行中 — 见 [`docs/V2_BACKLOG.md`](V2_BACKLOG.md)
 > **日期：** 2026-07-11  
 > **评审：** CONDITIONAL GO（有条件通过）— 契约先行，禁止直接大规模 `git mv`  
 > **目标：** 将 Claimfold 拆分为 Mission OS（任务操作系统）最小基础 Platform（平台层）与 Research Council（研究委员会）会议 App（应用层），拆分后 `./council.sh` 仍可正常运行。
@@ -350,6 +350,23 @@ _SCHEMA = files("missionos").joinpath("schemas/meeting_plan.schema.json")
 
 ---
 
+### Phase 5 — Platform Hardening（平台硬化，v2）
+
+> **目标：** 拆分「可运行」升级为「可独立消费、可日常依赖」；不新增 Platform 领域语义。
+
+| 步骤 | 具体操作 | 状态 |
+|------|----------|------|
+| 5.1 | `platform/README.md` 与 Phase 4 完成态对齐 | ✅ |
+| 5.2 | `apps/platform_smoke` — 第二消费方 fixture（ledger + plan） | ✅ |
+| 5.3 | `tests/platform/test_platform_smoke_app.py` + 禁止 import `council` | ✅ |
+| 5.4 | `check_platform_boundary.sh` 覆盖 `apps/platform_smoke` | ⏳ |
+| 5.5 | `missionos-v0.1` tag；README 推荐 `install_editable.sh` | ⏳ |
+| 5.6 | 文档化允许的 App path-inject shim（如 `council/plan/paths.py`） | ⏳ |
+
+**完成标准：** smoke app CI 绿；契约文档与目录一致；进入 Phase 6（产品化）前 Owner 确认。
+
+---
+
 ## 7. import 迁移对照表
 
 | 旧 import | 新 import |
@@ -498,3 +515,4 @@ COUNCIL_MOCK=1 ./council.sh run-parallel
 | v4.0 | 2026-07-11 | Phase 2 落地：`adapters/`、`council/claims/`、`guest_aliases.yaml`、lazy `council.__init__` |
 | v4.1 | 2026-07-11 | Phase 3 落地：`apps/research_council/` 搬迁；`APP_ROOT`/`DATA_ROOT` 拆分；根 `council.sh` 转发；CI 88 项 + mock e2e 通过 |
 | v5.0 | 2026-07-11 | Phase 4 落地：删除 compat shim；`focus_rules.yaml`、`executor-guest.yaml`；归档 `split_engine`/`split_core`；更新 STRUCTURE/README |
+| v6.0 | 2026-07-12 | Phase 5 开工：`V2_BACKLOG.md`、`apps/platform_smoke` fixture；V0.2 封板后「先平台硬化 → 再产品化」 |

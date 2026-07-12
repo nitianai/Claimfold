@@ -20,6 +20,7 @@ Claimfold/
 │   ├── pyproject.toml              # name = "missionos"
 │   └── missionos/                  # ledger / session / executor / plan 纯核
 ├── apps/
+│   ├── platform_smoke/             # Phase 5：missionos 独立消费方 fixture（非产品 App）
 │   └── research_council/           # Research Council App（应用层）
 │       ├── council.sh              # PYTHONPATH + engine 入口
 │       ├── pyproject.toml          # dependencies = ["missionos"]
@@ -51,7 +52,8 @@ Claimfold/
 ├── docs/                           # 项目规范与实验记录
 │   ├── PLATFORM_APP_SPLIT.md
 │   ├── CLAIM_LIFECYCLE.md
-│   ├── EVOLUTION_PLAN.md       # 进化方案（PR-A…E，对照 Mission OS 原型）
+│   ├── EVOLUTION_PLAN.md       # 进化方案 v1（已完成）
+│   ├── V2_BACKLOG.md           # v2：Phase 5 平台硬化 → Phase 6 产品化
 │   └── archive/
 ├── claims/                         # 跨会话主张账本（gitignore，DATA_ROOT）
 ├── meetings/                       # 会议产物（gitignore，DATA_ROOT）

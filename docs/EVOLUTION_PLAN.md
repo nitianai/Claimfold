@@ -783,13 +783,13 @@ COUNCIL_MOCK=1 ./council.sh run-parallel
 - 已有 tag：`evolution-v1`（控制面进化 v1）
 - 规范权威：`docs/CLAIM_LIFECYCLE.md`（V0.2 已封板）
 
-### v2 backlog（新开，不写入本文件）
+### v2 backlog（见 [`docs/V2_BACKLOG.md`](V2_BACKLOG.md)，不写入本文件）
 
-| 方向 | 示例项 |
-|------|--------|
-| 产品化 | Web 一键 start、daemon/run-daily 文档化 |
-| 主张层 | bundle import、§8 Claim 指标、`claim verify` 纳入 release 门禁 |
-| 平台 | `PLATFORM_APP_SPLIT.md` 后续 Phase |
-| 卫生 | `cmd_init` 默认嘉宾去下线模型名（审计报告） |
+| 阶段 | 方向 | 状态 |
+|------|------|------|
+| **Phase 5** | 平台硬化：`platform_smoke`、契约收口、`missionos-v0.1` | 🔄 执行中 |
+| **Phase 6** | 产品化：Web 日常流、`DAILY_OPS.md`、实验归档 | ⏳ Phase 5 后 |
+| 主张层 | bundle import、§8 Claim 指标 | ⏳ 另开 |
+| 卫生 | `cmd_init` 默认嘉宾去下线模型名 | ⏳ Phase 6 |
 
 **完成定义：** Owner 确认封板 → 文档收口 → 打 `v0.2` tag → 新需求单独开 v2 设计/backlog 文档。

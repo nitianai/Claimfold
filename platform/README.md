@@ -1,6 +1,6 @@
 # Mission OS（任务操作系统）— Platform（平台层）契约 v0.1
 
-> **状态：** 冻结草案（Phase 0）  
+> **状态：** Phase 4 已交付（2026-07-11）；Phase 5 硬化见 [`docs/V2_BACKLOG.md`](../docs/V2_BACKLOG.md)
 > **包名：** `missionos`  
 > **消费方：** `apps/research_council`（Claimfold Research Council（研究委员会）会议应用）  
 > **硬约束：** Platform（平台层）**不得** import `council`、`runtime_ext`、`claim_lifecycle`
@@ -199,19 +199,23 @@ def invoke_command(
 | **1** | 抽取纯核（`utils`、`ledger.store`、`session`、`executor`、`plan` 不含 runtime）+ Thin Shim（薄兼容层） |
 | **2** | App Adapter（适配器）（`claim_ledger`、`plan_runtime`、`executor_policy`、`session_adapter`） |
 | **3** | 物理搬迁至 `apps/research_council/`；运行时数据留仓库根 |
-| **4** | Shim Burn-down（兼容层销毁）、Config Externalization（配置外置）、可选 Dummy App（哑应用）验证 |
+| **4** | Shim Burn-down（兼容层销毁）、Config Externalization（配置外置） |
+| **5** | Dummy App fixture（`apps/platform_smoke`）、契约收口、可选 `missionos-v0.1` tag |
+
+**第二消费方验证：** `apps/platform_smoke` — 仅依赖 `missionos`，不得 import `council`。
 
 ---
 
-## 6. Phase 1 门禁清单（Gate Checklist）
+## 6. 门禁清单（Gate Checklist）
 
-合并 Phase 1 前须满足：
+Phase 1–4 已满足；合并 Phase 5 变更前须满足：
 
-- [ ] `import missionos` 不得 import `council` 或 `runtime_ext`
-- [ ] `./scripts/check_platform_boundary.sh` 通过
-- [ ] 全仓库仅有 **一个** 真实 `append_event` 实现
-- [ ] `plan/runtime.py` 仍在 `platform/missionos/plan/` 之外
-- [ ] `./council.sh` 不变；`make ci` 全绿（12 模块 / 约 86 cases）
+- [x] `import missionos` 不得 import `council` 或 `runtime_ext`
+- [x] `./scripts/check_platform_boundary.sh` 通过
+- [x] 全仓库仅有 **一个** 真实 `append_event` 实现
+- [x] `plan/runtime.py` 在 App `adapters/plan_runtime.py`，不在 Platform
+- [x] `./council.sh` 不变；`scripts/ci.sh` 全绿
+- [x] `apps/platform_smoke` 通过 `tests/platform/test_platform_smoke_app.py`
 
 ---
 
