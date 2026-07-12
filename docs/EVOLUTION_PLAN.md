@@ -572,6 +572,7 @@ COUNCIL_MOCK=1 ./council.sh run-parallel
 | 2026-07-12 | §15：F/D 落地后三次审议，收窄 PR-E、宣布进化方案 v1 收尾路径 |
 | 2026-07-12 | PR-E 落地：claim envelope + verify 不变量 + export bundle；v1 Implemented |
 | 2026-07-12 | §16：PR-C.2 require_before_promote + Web 运行策略可编辑 |
+| 2026-07-12 | 实验 G：v1 mock 对照验收（EXPERIMENTS §12，CI 第 6 步） |
 
 ---
 
@@ -713,7 +714,7 @@ COUNCIL_MOCK=1 ./council.sh run-parallel
 | PR3 plan runner | ✅ `resolve_runtime_plan`（`80ba162`） |
 | PR-C.2 `require_before_promote` | ✅ §16 |
 | Web failure_policy 可编辑 | ✅ §16 |
-| 实验对照 | 待做 — 见 `docs/EXPERIMENTS.md` |
+| 实验对照 | ✅ 实验 G — `scripts/run_v1_validation_experiment.sh` |
 
 ### PR-E 开工清单（复制即用）
 

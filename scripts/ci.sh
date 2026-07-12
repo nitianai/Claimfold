@@ -17,28 +17,28 @@ echo "root: $ROOT"
 echo "python: $(python3 --version 2>&1)"
 echo ""
 
-echo "[0/6] Editable install (missionos + research-council)"
+echo "[0/7] Editable install (missionos + research-council)"
 ./scripts/install_editable.sh
 if ! python3 -m pip --version >/dev/null 2>&1; then
   export PYTHONPATH="${ROOT}/platform:${ROOT}/apps/research_council/lib${PYTHONPATH:+:${PYTHONPATH}}"
 fi
 
 echo ""
-echo "[1/6] Platform boundary + tests (tests/platform/)"
+echo "[1/7] Platform boundary + tests (tests/platform/)"
 ./scripts/check_platform_boundary.sh
 python3 tests/platform/run_tests.py
 
 echo ""
-echo "[2/6] App tests (tests/app/run_tests.py)"
+echo "[2/7] App tests (tests/app/run_tests.py)"
 python3 tests/app/run_tests.py
 
 echo ""
-echo "[3/6] Engine import smoke"
+echo "[3/7] Engine import smoke"
 python3 -c "import missionos; import engine; print('engine import ok')"
 
 if ! $QUICK; then
   echo ""
-  echo "[4/6] Strict default (fail-closed)"
+  echo "[4/7] Strict default (fail-closed)"
   python3 -c "
 from missionos.utils import set_relax_cli, strict_cli_enabled
 set_relax_cli(False)
@@ -46,14 +46,18 @@ assert strict_cli_enabled(), 'strict must default on'
 print('strict default ok')
 "
   echo ""
-  echo "[5/6] Meeting E2E (mock offline, auto-stop on exit)"
+  echo "[5/7] Meeting E2E (mock offline, auto-stop on exit)"
   export COUNCIL_AUTO_STOP=1
   ./scripts/test_meeting_e2e.sh
   ./scripts/test_interactive_meeting.sh
+  echo ""
+  echo "[6/7] v1 validation experiment (mock gold, 2 rounds)"
+  ./scripts/run_v1_validation_experiment.sh
 else
   echo ""
-  echo "[4/6] Skipped strict (--quick)"
-  echo "[5/6] Skipped meeting e2e (--quick)"
+  echo "[4/7] Skipped strict (--quick)"
+  echo "[5/7] Skipped meeting e2e (--quick)"
+  echo "[6/7] Skipped v1 validation (--quick)"
 fi
 
 echo ""

@@ -333,4 +333,42 @@ max_parallel: 6
 
 ---
 
-*最后更新：2026-07-10 | Phase 2 完成 · E1–E5 ✅*
+---
+
+## 12. 实验 G — 进化 v1 对照（mock，2026-07-12）
+
+> **目的：** 验证 PR-A…E + Hotfix + PR3 + PR-C.2 未破坏 Research 语义闭环与可度量产出。  
+> **基线参照：** §2 实验 B 基准 `meet-20260710-021348`（黄金 3 人，真实 CLI）。
+
+**复现：**
+
+```bash
+./scripts/run_v1_validation_experiment.sh
+# 保留产物：./scripts/run_v1_validation_experiment.sh --keep
+```
+
+**流程：** `start --require-before-promote` → `context` → `select`（3 职能位）→ `run-parallel` ×2 → `metrics` → 自动验收。
+
+**典型结果（`COUNCIL_MOCK=1`，2026-07-12）：**
+
+| 指标 | v1 mock 对照 | 基线 B（真实 CLI，单轮） | 判定 |
+|------|-------------|-------------------------|------|
+| 轮次 | 2 | 1 | 语义闭环需 2 轮 |
+| Guest 发言 | 6 | 3 | mock 双轮正常 |
+| CP / CF / OQ | 6 / 1 / 0 | 7 / 2 / 4 | mock 量级合理，非 1:1 |
+| 语义闭环 R2 | **通过** | 未测单轮 | ✅ 核心不变 |
+| Guest 失败率 | 0% | 0% | ✅ |
+| Summary JSON 解析 | 100% | 100% | ✅ |
+| guest_slots | 6 条 | — | v1 新增，已落盘 |
+| require_before_promote | true（启动 flag） | — | v1 门禁可启用 |
+
+**结论（Grok + Codex + Claude 审议）：**
+
+1. **架构未退化** — 双轮 `run-parallel` 仍通过 `verify_research_semantic_loop`。
+2. **控制面未污染 state** — `guest_failure_rate_pct=0`，无静默失败推进。
+3. **mock 实验不替代真实 floor** — 真实 CLI 黄金复验仍建议 Owner 择机跑一轮（见 §2 基线）。
+4. **CI 门禁** — `scripts/ci.sh` 第 6 步 + `tests/app/test_v1_validation_experiment.py`。
+
+---
+
+*最后更新：2026-07-12 | Phase 2 完成 · v1 对照实验 G ✅*
