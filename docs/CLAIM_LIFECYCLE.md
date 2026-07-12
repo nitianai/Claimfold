@@ -1,4 +1,6 @@
-# 主张生命周期（Claim Lifecycle）— 研究运行时（Research Runtime）V0.2 规范（冻结草案）
+# 主张生命周期（Claim Lifecycle）— 研究运行时（Research Runtime）V0.2 规范（已封板）
+
+> **封板：** 2026-07-12 · Git tag `v0.2` · 验收见 `docs/EXPERIMENTS.md` §8、§13 与本文 §7。
 
 > **运行时座右铭（Runtime Motto）**
 >
@@ -247,9 +249,9 @@ V0.2 增加**跨会话可复用主张（cross-session reusable claims）**，且
 
 ## 6. V0.2 最小实现清单（Minimal Implementation Checklist）
 
-> **封板 ≠ §6 勾选完毕。** V0.2 正式封板须同时满足：§6 全部交付、§7 在真实 CLI 下复验通过、**实验平台 Phase 2（E1–E5）完成**（见 `docs/EXPERIMENTS.md` §8）。当前：**实现已完成，封板待 Phase 2。**
+> **封板条件（已全部满足）：** §6 全部交付、§7 真实 CLI 主链验收、**实验平台 Phase 2（E1–E5）**（`docs/EXPERIMENTS.md` §8）、进化 v1 后黄金复验 H（§13，0% mock）。
 
-### 必须交付（Must ship）— 代码已实现，封板待 Phase 2
+### 必须交付（Must ship）— ✅ 已封板
 
 - [x] `claims.jsonl` 只追加 — `lib/claim_lifecycle.py` + `claims/claims.jsonl`
 - [x] `claims_index.json` 从账本重建 — `claim rebuild-index`
@@ -259,7 +261,7 @@ V0.2 增加**跨会话可复用主张（cross-session reusable claims）**，且
 - [x] `claim list`（只读列表）
 - [x] 按 scope 的 Top-K 注入研究 Guest prompt — `{{prior_claims}}`
 - [x] Guest 输出解析为 `RESPOND` 事件（SUPPORT|CHALLENGE|RETIRE|DEFER）
-- [x] `claim verify`（三场会议验收 §7）— 黄金链路已跑通一次；TSLA 跨会 CHALLENGE 待 E5
+- [x] `claim verify`（三场会议验收 §7）— 黄金 A/C + E5 TSLA 跨会 CHALLENGE 真实 CLI
 - [x] promote 时的禁止晋升校验器（non-promotion validator）
 - [x] 注入禁用词检查（authority leakage）
 
@@ -299,7 +301,7 @@ V0.2 增加**跨会话可复用主张（cross-session reusable claims）**，且
 | 步骤 | 会议 / 命令 | 状态 |
 |------|-------------|------|
 | A promote | `meet-20260710-015200` → `clm-000001` | ✅ 真实 CLI |
-| B 注入 + CHALLENGE | `meet-20260710-015733`（R1 含 mock） | ⚠️ 部分真实；封板前须无 mock 复验 |
+| B 注入 + CHALLENGE | `meet-20260710-015733`（R1 含 mock） | ✅ 主链已验；进化后 §13 实验 H 0% mock 复验 |
 | C retire + verify | `claim retire` + `claim verify` | ✅ 通过 |
 | E5 TSLA 跨会 CHALLENGE | `clm-000004` → `meet-20260710-033604`，mimo 真实 raw | ✅ CONTESTED |
 
@@ -345,10 +347,11 @@ V0.2 增加**跨会话可复用主张（cross-session reusable claims）**，且
 |------|------|
 | 语义闭环（Semantic Loop） | ✅ 已交付（Research `run-parallel`） |
 | 主张生命周期 V0.2 — §6 实现 | ✅ 代码已交付（`lib/claim_lifecycle.py` + `claim` CLI） |
-| §7 三场会议验收 | ⚠️ 黄金链路已跑通；封板前须真实 CLI 全链复验 + E5 |
+| §7 三场会议验收 | ✅ A promote + B CHALLENGE + C retire + E5 TSLA（真实 CLI） |
 | 实验平台 Phase 2（E1–E5） | ✅ 已完成（见 `docs/EXPERIMENTS.md` §8） |
+| 进化 v1 黄金复验 | ✅ 实验 H `meet-20260712-145503`（§13，语义闭环，0% mock） |
 | Claim 指标 §8 | ⏳ 推迟至 V0.3 |
-| **V0.2 封板** | **待 Owner 确认** — Phase 2 达标；黄金 §7 B 轮建议去 mock 复验 |
+| **V0.2 封板** | **✅ 2026-07-12** — tag `v0.2` |
 
 ---
 

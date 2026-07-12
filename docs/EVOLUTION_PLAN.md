@@ -1,6 +1,6 @@
 # Claimfold 进化方案（可执行规格）
 
-> **状态：** Implemented（v1 — PR-A…E 已落地，见 §15）
+> **状态：** Implemented + **V0.2 已封板**（2026-07-12，tag `v0.2`；见 §17）。本文件 v1 规格已冻结，新需求开 v2 backlog。
 > **日期：** 2026-07-11  
 > **读者：** 实现 Agent / 工程师  
 > **原则：** 以 Claimfold 产品语义为主；Mission OS 研究原型（`~/code/research/technology-graph-grok`）仅作**模式参考**，禁止整仓拷贝。  
@@ -574,6 +574,7 @@ COUNCIL_MOCK=1 ./council.sh run-parallel
 | 2026-07-12 | §16：PR-C.2 require_before_promote + Web 运行策略可编辑 |
 | 2026-07-12 | 实验 G：v1 mock 对照验收（EXPERIMENTS §12，CI 第 6 步） |
 | 2026-07-12 | 实验 H：真实 CLI 黄金复验 PASS（EXPERIMENTS §13，`meet-20260712-145503`） |
+| 2026-07-12 | §17：Research Runtime V0.2 正式封板；§15/§16 backlog 全部 ✅ |
 
 ---
 
@@ -758,3 +759,37 @@ COUNCIL_MOCK=1 ./council.sh run-parallel
 |------|------|
 | Codex：运行中改 `failure_policy` 是否影响已完成轮次 | **采纳** — 仅影响后续轮次；文档/UI 标注 |
 | Grok：Web 是否在 start 时暴露 require 开关 | **部分采纳** — start 仍走 CLI flag；Web 会中可调 |
+
+---
+
+## §17 V0.2 封板（2026-07-12）
+
+> **结论：** Research Runtime V0.2 与进化方案 v1 一并收口；本进化文档不再追加 PR 条目。
+
+### 封板条件核对
+
+| 条件 | 证据 | 状态 |
+|------|------|------|
+| Claim Lifecycle §6 实现 | `claim_lifecycle.py` + `claim` CLI | ✅ |
+| §7 三场会议验收 | A promote、B CHALLENGE、C retire、`claim verify` | ✅ |
+| Phase 2（E1–E5） | `docs/EXPERIMENTS.md` §8 | ✅ |
+| 进化 v1（PR-A…E + backlog） | §15/§16 全部 ✅ | ✅ |
+| 真实 CLI floor 未退化 | 实验 H `meet-20260712-145503`（0% mock，语义闭环） | ✅ |
+| CI 门禁 | `scripts/ci.sh` 7 步 · 141 tests | ✅ |
+
+### 版本标记
+
+- Git tag：**`v0.2`**（Research Runtime 封板）
+- 已有 tag：`evolution-v1`（控制面进化 v1）
+- 规范权威：`docs/CLAIM_LIFECYCLE.md`（V0.2 已封板）
+
+### v2 backlog（新开，不写入本文件）
+
+| 方向 | 示例项 |
+|------|--------|
+| 产品化 | Web 一键 start、daemon/run-daily 文档化 |
+| 主张层 | bundle import、§8 Claim 指标、`claim verify` 纳入 release 门禁 |
+| 平台 | `PLATFORM_APP_SPLIT.md` 后续 Phase |
+| 卫生 | `cmd_init` 默认嘉宾去下线模型名（审计报告） |
+
+**完成定义：** Owner 确认封板 → 文档收口 → 打 `v0.2` tag → 新需求单独开 v2 设计/backlog 文档。
