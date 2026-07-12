@@ -9,7 +9,8 @@ import re
 from pathlib import Path
 from typing import Any
 
-from council.claims.stream_isolation import assert_claim_ledger_event_type
+from council.adapters.claim_envelope import ensure_claim_envelope
+from council.adapters.claim_stream_isolation import assert_claim_ledger_event_type
 from missionos.ledger.store import (
     append_event,
     claims_dir,
@@ -73,8 +74,9 @@ def next_claim_id(root: Path) -> str:
 
 
 def append_claim_event(root: Path, event: dict[str, Any]) -> None:
-    assert_claim_ledger_event_type(str(event.get("event", "")))
-    append_event(root, event)
+    stamped = ensure_claim_envelope(event)
+    assert_claim_ledger_event_type(str(stamped.get("event", "")))
+    append_event(root, stamped)
 
 
 def append_promote_event(root: Path, event: dict[str, Any]) -> str:
@@ -83,7 +85,7 @@ def append_promote_event(root: Path, event: dict[str, Any]) -> str:
     try:
         f.seek(0)
         max_n = _max_promote_id_from_text(f.read())
-        out = dict(event)
+        out = ensure_claim_envelope(dict(event))
         out["claim_id"] = out.get("claim_id") or f"clm-{max_n + 1:06d}"
         f.seek(0, 2)
         f.write(json.dumps(out, ensure_ascii=False) + "\n")

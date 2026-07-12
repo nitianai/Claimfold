@@ -1,6 +1,6 @@
 # Claimfold 进化方案（可执行规格）
 
-> **状态：** Ready for implementation（Grok Build 可直接开工）  
+> **状态：** Implemented（v1 — PR-A…E 已落地，见 §15）
 > **日期：** 2026-07-11  
 > **读者：** 实现 Agent / 工程师  
 > **原则：** 以 Claimfold 产品语义为主；Mission OS 研究原型（`~/code/research/technology-graph-grok`）仅作**模式参考**，禁止整仓拷贝。  
@@ -599,7 +599,7 @@ COUNCIL_MOCK=1 ./council.sh run-parallel
 - [x] **PR-C：** FailurePolicy 三态 + `OwnerInterruptRaised/Resolved`；不拦 promote（`80a005e`）
 - [x] **PR-F：** Web 消费 slot/HITL；`rc-*` 映射测试
 - [x] **PR-D：** `executor_policy` inspect_invoke + ExecutorDenied + 并行上限别名
-- [ ] **PR-E：** 账本 envelope + `claim verify` 扩展
+- [x] **PR-E：** 账本 envelope + `claim verify` 扩展
 
 ---
 
@@ -657,7 +657,7 @@ COUNCIL_MOCK=1 ./council.sh run-parallel
 ### PR-D / E 备忘
 
 - [x] **PR-D：** `executor_policy.py` inspect_invoke + ExecutorDenied + `max_parallel_guests` 别名
-- [ ] **PR-E：** claims envelope `schema_version` + `claim verify` 扩展（见 §15）
+- [x] **PR-E：** claims envelope `schema_version` + `claim verify` 扩展（见 §15）
 - **可选 PR-C.2：** `require_before_promote` 拦截（进化方案 v1 之后，不挡 E）
 
 ---
@@ -714,11 +714,11 @@ COUNCIL_MOCK=1 ./council.sh run-parallel
 
 ### PR-E 开工清单（复制即用）
 
-- [ ] `claims/` 模块：`ensure_claim_envelope` + 写入路径挂接
-- [ ] `verify_index_rebuild_invariant` + 扩展 `cmd_claim_verify`
-- [ ] `scripts/export_claims_bundle.py`
-- [ ] `tests/app/test_claim_verify_rebuild.py`
-- [ ] `ci.sh` 全绿；§0 状态改为 Implemented；中文 commit
+- [x] `adapters/claim_envelope.py` + 写入路径挂接
+- [x] `verify_index_rebuild_invariant` + 扩展 `cmd_claim_verify`
+- [x] `scripts/export_claims_bundle.py`
+- [x] `tests/app/test_claim_verify_rebuild.py`
+- [x] `ci.sh` 全绿；§0 状态改为 Implemented；中文 commit
 
 ### 进化方案 v1 完成定义
 

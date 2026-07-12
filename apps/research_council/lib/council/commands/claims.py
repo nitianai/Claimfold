@@ -14,6 +14,8 @@ from council.claims import (
     rebuild_index,
     validate_promotion_candidate,
     validate_scope,
+    verify_index_rebuild_invariant,
+    verify_ledger_monotonicity,
     verify_three_meeting_chain,
 )
 from missionos.utils import resolve_meeting_path, utc_now
@@ -148,17 +150,31 @@ def cmd_claim_list(_: argparse.Namespace) -> None:
 
 
 def cmd_claim_verify(_: argparse.Namespace) -> None:
-    ok, errors = verify_three_meeting_chain(DATA_ROOT)
-    if ok:
-        print("✓ Claim Lifecycle V0.2 验收通过")
-        index = load_index(DATA_ROOT)
-        for cid, view in sorted(index.get("claims", {}).items()):
-            print(f"  {cid}: {view.get('status')} (support={view.get('support_count', 0)})")
-        return
-    print("✗ Claim Lifecycle 验收失败:")
-    for err in errors:
-        print(f"  - {err}")
-    raise SystemExit(1)
+    checks = [
+        ("三场会议链", verify_three_meeting_chain(DATA_ROOT)),
+        ("index 重建不变量", verify_index_rebuild_invariant(DATA_ROOT)),
+        ("账本单调性", verify_ledger_monotonicity(DATA_ROOT)),
+    ]
+    errors: list[str] = []
+    passed: list[str] = []
+    for label, (ok, errs) in checks:
+        if ok:
+            passed.append(label)
+        else:
+            errors.extend(f"[{label}] {e}" for e in errs)
+
+    if errors:
+        print("✗ Claim verify 失败:")
+        for err in errors:
+            print(f"  - {err}")
+        raise SystemExit(1)
+
+    print("✓ Claim verify 通过")
+    for label in passed:
+        print(f"  · {label}")
+    index = load_index(DATA_ROOT)
+    for cid, view in sorted(index.get("claims", {}).items()):
+        print(f"  {cid}: {view.get('status')} (support={view.get('support_count', 0)})")
 
 
 def cmd_claim(args: argparse.Namespace) -> None:

@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from council.claims.stream_isolation import assert_meeting_event_type
+from council.adapters.claim_stream_isolation import assert_meeting_event_type
 from missionos.session.events import append_session_event, load_session_events
 from missionos.utils import utc_now
 
