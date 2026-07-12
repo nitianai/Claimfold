@@ -573,6 +573,7 @@ COUNCIL_MOCK=1 ./council.sh run-parallel
 | 2026-07-12 | PR-E 落地：claim envelope + verify 不变量 + export bundle；v1 Implemented |
 | 2026-07-12 | §16：PR-C.2 require_before_promote + Web 运行策略可编辑 |
 | 2026-07-12 | 实验 G：v1 mock 对照验收（EXPERIMENTS §12，CI 第 6 步） |
+| 2026-07-12 | 实验 H：真实 CLI 黄金复验 PASS（EXPERIMENTS §13，`meet-20260712-145503`） |
 
 ---
 
@@ -714,7 +715,8 @@ COUNCIL_MOCK=1 ./council.sh run-parallel
 | PR3 plan runner | ✅ `resolve_runtime_plan`（`80ba162`） |
 | PR-C.2 `require_before_promote` | ✅ §16 |
 | Web failure_policy 可编辑 | ✅ §16 |
-| 实验对照 | ✅ 实验 G — `scripts/run_v1_validation_experiment.sh` |
+| 实验对照 mock | ✅ 实验 G — `scripts/run_v1_validation_experiment.sh` |
+| 真实 CLI 黄金复验 | ✅ 实验 H — `scripts/run_gold_revalidation_cli.sh`（`meet-20260712-145503` PASS） |
 
 ### PR-E 开工清单（复制即用）
 

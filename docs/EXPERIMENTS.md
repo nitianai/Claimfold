@@ -318,6 +318,7 @@ max_parallel: 6
 | `meet-20260710-033604` | **Phase2-E5-Claim-CHALLENGE** | `raw/round-001-mimo.md`, `clm-000004` |
 | `meet-20260710-040135` | **5人风格分化-grok4.3**（context mock） | `raw/round-001-laguna.md` DEFER |
 | `meet-20260710-040737` | **5人风格分化-grok真实context** | `raw/round-001-laguna.md` CHALLENGE |
+| `meet-20260712-145503` | **v1 黄金复验 H**（真实 CLI） | `gold_revalidation_report.json` |
 
 会议产物在 `meetings/`（`.gitignore`），本地保留；指标摘要在本文件。
 
@@ -371,4 +372,42 @@ max_parallel: 6
 
 ---
 
-*最后更新：2026-07-12 | Phase 2 完成 · v1 对照实验 G ✅*
+## 13. 实验 H — 进化 v1 黄金复验（真实 CLI，2026-07-12）
+
+> **目的：** 在 v1 进化（PR-A…E + Hotfix + PR3 + PR-C.2）后，用**真实 opencode** 复验 Research 语义闭环，对照 §1 黄金 floor。  
+> **基线：** `meet-20260710-015200`（实验 A，2 轮语义闭环）。
+
+**复现：**
+
+```bash
+./scripts/run_gold_revalidation_cli.sh
+# 指定基线：./scripts/run_gold_revalidation_cli.sh --baseline meet-20260710-015200
+```
+
+**流程：** `start` → `context` → `select nemo gptoss20 north`（3 职能位）→ `run-parallel` ×2 → `metrics` → 自动验收 + 基线对比。
+
+**结果（`meet-20260712-145503`，真实 CLI）：**
+
+| 指标 | v1 复验 H | 基线 A（§1） | 判定 |
+|------|-----------|-------------|------|
+| 轮次 | 2 | 2 | ✅ |
+| Guest 发言 | 6 | 5 | ✅ |
+| 平均耗时 | 90.9s/轮 | 156s/轮 | ✅ 更快 |
+| JSON 解析成功率 | 100% | 100% | ✅ |
+| Guest 失败率 | 0% | 0% | ✅ |
+| Mock 率 | **0%** | 20% | ✅ 优于基线 |
+| 语义闭环 R2 | **通过** | 通过 | ✅ 核心不变 |
+| 最终 state | CP:6 / CF:6 / OQ:5 | CP:19 / CF:8 / OQ:14 | 议题更收敛 |
+
+**结论：**
+
+1. **v1 未退化** — 双轮 `run-parallel` 仍通过 `verify_research_semantic_loop`；`guest_failure_rate_pct=0`。
+2. **Mock 污染消除** — 3 人阵容（nemo + gptoss20 + north）全程真实输出，mock 率 0%（基线 A 因 north summarizer 为 20%）。
+3. **产出更收敛** — OQ 5 vs 基线 14，符合「议题聚焦 + 控制人数」原则；非质量下降。
+4. **脚本注意** — 必须 `export COUNCIL_DATA_ROOT=$REPO_ROOT`；勿残留 `/tmp` 或 `COUNCIL_MOCK` 环境变量。
+
+产物：`meetings/meet-20260712-145503/gold_revalidation_report.json`（本地，`.gitignore`）。
+
+---
+
+*最后更新：2026-07-12 | Phase 2 完成 · v1 mock 对照 G ✅ · 真实 CLI 黄金复验 H ✅*
