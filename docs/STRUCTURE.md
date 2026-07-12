@@ -44,8 +44,9 @@ Claimfold/
 │       ├── web/                    # 会议室 Web UI（server.py + static/）
 │       └── scripts/                # fetch_equity、compare_meetings 等
 ├── scripts/
-│   ├── ci.sh                       # 本地 CI 门禁
-│   ├── check_platform_boundary.sh
+│   ├── install_editable.sh         # 推荐：pip install -e platform + research-council
+│   ├── ci.sh                       # 本地 CI 门禁（调用 install_editable.sh）
+│   ├── check_platform_boundary.sh  # missionos + platform_smoke 边界扫描
 │   ├── council-web.sh              # Web UI 启动脚本
 │   └── export_claims_bundle.py     # 主张账本导出（manifest + jsonl + index）
 ├── tests/                          # 回归测试（引用 App lib + platform）

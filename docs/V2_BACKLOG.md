@@ -1,6 +1,6 @@
 # Claimfold v2 Backlog（V0.2 封板后）
 
-> **状态：** 执行中 — **先做平台硬化（Phase 5），再做产品化/日常化（Phase 6）**  
+> **状态：** Phase 5 ✅ 完成（`missionos-v0.1`）— **Phase 6 产品化/日常化** 待开工  
 > **前置：** Research Runtime V0.2 已封板（tag `v0.2`，2026-07-12）  
 > **原则：** Platform（`missionos`）与 App（`research_council`）边界已落地（`PLATFORM_APP_SPLIT` Phase 0–4 ✅）；v2 不推翻拆分，只做硬化与日常可用性。
 
@@ -29,12 +29,12 @@
 |----|-----|------|------|
 | P5-1 | 契约文档收口 | `platform/README.md` 状态 → Phase 4 完成；`PLATFORM_APP_SPLIT` §Phase 5 | ✅ |
 | P5-2 | Dummy App（哑应用）fixture | `apps/platform_smoke` + `tests/platform/test_platform_smoke_app.py` | ✅ |
-| P5-3 | 边界 CI 扩展 | smoke app 不得 import `council`；`check_platform_boundary.sh` 覆盖 `apps/platform_smoke` | ⏳ |
-| P5-4 | Editable install 文档化 | README / STRUCTURE 明确 `install_editable.sh` 为推荐路径 | ⏳ |
-| P5-5 | Platform 版本 tag | `missionos-v0.1`（仅 `platform/` 快照） | ⏳ |
-| P5-6 | 有意保留的 App 注入层文档化 | `council/plan/paths.py` 等 path-inject shim 记入契约「允许列表」 | ⏳ |
+| P5-3 | 边界 CI 扩展 | smoke app 不得 import `council`；`check_platform_boundary.sh` 覆盖 `apps/platform_smoke` | ✅ |
+| P5-4 | Editable install 文档化 | README / STRUCTURE 明确 `install_editable.sh` 为推荐路径 | ✅ |
+| P5-5 | Platform 版本 tag | `missionos-v0.1`（`platform/` 包版本 0.1.0） | ✅ |
+| P5-6 | 有意保留的 App 注入层文档化 | `council/plan/paths.py` 等 path-inject shim 记入契约「允许列表」 | ✅ |
 
-**Phase 5 完成定义：** P5-1…P5-4 合入且 CI 绿；Owner 确认可进入 Phase 6。
+**Phase 5 完成定义：** P5-1…P5-6 合入且 CI 绿 → **✅ 可进入 Phase 6**。
 
 ---
 
@@ -84,3 +84,4 @@ P5-1 + P5-2（本批）→ P5-3…P5-6 → P6-2 文档 → P6-1 Web → P6-3 归
 | 日期 | 变更 |
 |------|------|
 | 2026-07-12 | 初版：Owner 确认「先平台硬化 → 再产品化」；P5-1/P5-2 开工 |
+| 2026-07-12 | Phase 5 收尾：boundary 扩展、install 文档、`missionos-v0.1` tag、shim allowlist |

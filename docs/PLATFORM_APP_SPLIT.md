@@ -1,6 +1,6 @@
 # Claimfold Platform（平台层）/ App（应用层）拆分方案
 
-> **状态：** Phase 0–4 ✅ 已交付；**Phase 5（平台硬化）** 执行中 — 见 [`docs/V2_BACKLOG.md`](V2_BACKLOG.md)
+> **状态：** Phase 0–5 ✅ 已交付（tag `missionos-v0.1`）；**Phase 6（产品化）** 待开工 — 见 [`docs/V2_BACKLOG.md`](V2_BACKLOG.md)
 > **日期：** 2026-07-11  
 > **评审：** CONDITIONAL GO（有条件通过）— 契约先行，禁止直接大规模 `git mv`  
 > **目标：** 将 Claimfold 拆分为 Mission OS（任务操作系统）最小基础 Platform（平台层）与 Research Council（研究委员会）会议 App（应用层），拆分后 `./council.sh` 仍可正常运行。
@@ -359,11 +359,11 @@ _SCHEMA = files("missionos").joinpath("schemas/meeting_plan.schema.json")
 | 5.1 | `platform/README.md` 与 Phase 4 完成态对齐 | ✅ |
 | 5.2 | `apps/platform_smoke` — 第二消费方 fixture（ledger + plan） | ✅ |
 | 5.3 | `tests/platform/test_platform_smoke_app.py` + 禁止 import `council` | ✅ |
-| 5.4 | `check_platform_boundary.sh` 覆盖 `apps/platform_smoke` | ⏳ |
-| 5.5 | `missionos-v0.1` tag；README 推荐 `install_editable.sh` | ⏳ |
-| 5.6 | 文档化允许的 App path-inject shim（如 `council/plan/paths.py`） | ⏳ |
+| 5.4 | `check_platform_boundary.sh` 覆盖 `apps/platform_smoke` | ✅ |
+| 5.5 | `missionos-v0.1` tag；README 推荐 `install_editable.sh` | ✅ |
+| 5.6 | 文档化允许的 App path-inject shim（`platform/README.md` §4.1） | ✅ |
 
-**完成标准：** smoke app CI 绿；契约文档与目录一致；进入 Phase 6（产品化）前 Owner 确认。
+**完成标准：** ✅ Phase 5 已满足；可进入 Phase 6（产品化）。
 
 ---
 

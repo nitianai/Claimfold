@@ -189,6 +189,19 @@ def invoke_command(
 | `lib/council/prompts.py` | Prompt（提示词）路由、`prior_claims` 注入 |
 | `lib/council/commands/*` | CLI 领域命令处理器 |
 
+### 4.1 允许的 App 层 Shim（Allowlist，Phase 4 后保留）
+
+> **原则：** Platform 不得 import App；App **可以** 薄封装 Platform 并注入本 App 的 `DATA_ROOT` / 配置路径。下列文件**不是**双实现，禁止删除或迁入 Platform。
+
+| 路径 | 类型 | 职责 |
+|------|------|------|
+| `apps/research_council/lib/council/plan/paths.py` | Path Inject（路径注入） | 将 `council.config` 的 `ROOT` / `scenarios/` / `bindings/` 注入 `missionos.plan.paths.PlanLayout` |
+| `apps/research_council/lib/council/plan/__init__.py` | Re-export + Wrapper（重导出 + 封装） | 重导出 `missionos.plan.*`；`build_meeting_plan` 默认 `default_plan_layout()` |
+| `apps/research_council/lib/council/adapters/*` | Adapter（适配器） | Claim / Plan runtime / Executor / Session 领域语义 |
+| `apps/research_council/lib/council/__init__.py` | Lazy Re-export | 避免 import 环；不复制 Platform 逻辑 |
+
+**门禁：** `./scripts/check_platform_boundary.sh` 扫描 `platform/missionos` 与 `apps/platform_smoke`；`tests/platform/test_shim_purity.py` 确保已删除的 compat 文件不复现。
+
 ---
 
 ## 5. 实施阶段摘要（Implementation Phases）
@@ -223,7 +236,21 @@ Phase 1–4 已满足；合并 Phase 5 变更前须满足：
 
 | 版本 | 含义 |
 |------|------|
-| `missionos 0.1.0` | Platform 初次抽取（Phase 1） |
+| `missionos 0.1.0`（`platform/pyproject.toml`） | Platform 初次抽取（Phase 1） |
+| Git tag `missionos-v0.1` | Phase 5 封板快照（monorepo 提交，包版本 0.1.0） |
 | Plan Schema `1.0` | `meeting_plan.schema.json`（PR1） |
 
 Platform V0.1 仅保证 **Linux `fcntl` flock**。跨平台锁不在范围内。
+
+---
+
+## 8. 安装（Installation）
+
+推荐从仓库根执行 editable install（与 `scripts/ci.sh` 第 0 步一致）：
+
+```bash
+./scripts/install_editable.sh
+# 安装 missionos（platform/）+ research-council（apps/research_council/）
+```
+
+无 `pip` 时脚本与 CI 回退 `PYTHONPATH=platform:apps/research_council/lib`；生产/开发环境建议配置 `pip` 以锁定依赖解析。

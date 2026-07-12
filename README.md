@@ -7,7 +7,7 @@
 基于 Council Engine V0.3 — 确定性多模型会议工作流。  
 **版本：** Research Runtime **V0.2 已封板**（2026-07-12，tag [`v0.2`](https://github.com/nitianai/Claimfold/releases/tag/v0.2)）· 进化 v1（tag `evolution-v1`）已落地。  
 **实验记录与结论：** 见 [`docs/EXPERIMENTS.md`](docs/EXPERIMENTS.md)（项目初心文档，持续更新）。  
-**v2 路线：** 见 [`docs/V2_BACKLOG.md`](docs/V2_BACKLOG.md) — **Phase 5 平台硬化**（进行中）→ **Phase 6 产品化/日常化**。
+**v2 路线：** 见 [`docs/V2_BACKLOG.md`](docs/V2_BACKLOG.md) — Phase 5 平台硬化 ✅ → **Phase 6 产品化/日常化**（进行中）。
 
 Engine 负责流程控制；Guest 负责推理；Summarizer 负责压缩；Owner 永远有控制权。
 
@@ -55,6 +55,15 @@ cd Claimfold
 ```bash
 COUNCIL_MOCK=1 ./council.sh run-parallel
 ```
+
+### 开发安装（推荐）
+
+```bash
+./scripts/install_editable.sh   # pip install -e platform/ + apps/research_council/
+./scripts/ci.sh                 # 本地 CI（7 步门禁）
+```
+
+无 `pip` 时 `council.sh` / `ci.sh` 自动回退 `PYTHONPATH`；长期开发建议启用 `pip`。详见 [`platform/README.md`](platform/README.md) §8。
 
 ## 命令参考
 

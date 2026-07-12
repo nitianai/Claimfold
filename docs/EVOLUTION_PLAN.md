@@ -787,8 +787,8 @@ COUNCIL_MOCK=1 ./council.sh run-parallel
 
 | 阶段 | 方向 | 状态 |
 |------|------|------|
-| **Phase 5** | 平台硬化：`platform_smoke`、契约收口、`missionos-v0.1` | 🔄 执行中 |
-| **Phase 6** | 产品化：Web 日常流、`DAILY_OPS.md`、实验归档 | ⏳ Phase 5 后 |
+| **Phase 5** | 平台硬化：`platform_smoke`、契约收口、`missionos-v0.1` | ✅ |
+| **Phase 6** | 产品化：Web 日常流、`DAILY_OPS.md`、实验归档 | 🔄 待开工 |
 | 主张层 | bundle import、§8 Claim 指标 | ⏳ 另开 |
 | 卫生 | `cmd_init` 默认嘉宾去下线模型名 | ⏳ Phase 6 |
 
