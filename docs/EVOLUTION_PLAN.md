@@ -568,6 +568,7 @@ COUNCIL_MOCK=1 ./council.sh run-parallel
 |------|------|
 | 2026-07-11 | 初版：基于 Mission OS 研究原型对照 + Claimfold 现状，输出 PR-A…E 可执行方案 |
 | 2026-07-11 | §13：Grok + Codex + Claude 三方审议，收窄 PR-A、统一 Slot 事实源、新增 PR-F、调整顺序 |
+| 2026-07-11 | §14：A/B/C 落地后二次审议，收窄 PR-F 范围、确认 F→D→E 不变 |
 
 ---
 
@@ -592,8 +593,67 @@ COUNCIL_MOCK=1 ./council.sh run-parallel
 
 ### 开工清单（复制即用）
 
-- [ ] **PR-A：** `test_stream_isolation.py` + `test_claim_promotion_gates.py`；可选收紧 raw 证据；`make ci` 绿
-- [ ] **PR-B：** `slots.py` + events 写入 + parallel/interactive 共用 + `status`/`repair-slots`
-- [ ] **PR-C：** FailurePolicy 三态 + `OwnerInterruptRaised/Resolved`；不拦 promote
+- [x] **PR-A：** `test_stream_isolation.py` + `test_claim_promotion_gates.py`；收紧 raw 证据；`ci.sh` 绿（`09da620`）
+- [x] **PR-B：** `slots.py` + events 写入 + parallel/interactive 共用 + `status`/`repair-slots`（`1cbc9e8`）
+- [x] **PR-C：** FailurePolicy 三态 + `OwnerInterruptRaised/Resolved`；不拦 promote（`80a005e`）
 - [ ] **PR-F：** Web 消费 slot/HITL；`rc-*` 映射测试
-- [ ] **PR-D / E：** 按原文档；每步 `make ci` + `check_platform_boundary.sh`
+- [ ] **PR-D / E：** 按原文档；每步 `ci.sh` + `check_platform_boundary.sh`
+
+---
+
+## 14. 三方二次审议（Grok + Codex + Claude，2026-07-11 — A/B/C 已落地）
+
+### 现状核对
+
+| PR | 提交 | 结论 |
+|----|------|------|
+| A | `09da620` | 流隔离 + promote 门禁 CI 已绿 |
+| B | `1cbc9e8` | `guest_slot_updated` + `guest_slots` 投影；parallel/interactive 共用 |
+| C | `80a005e` | 三态 FailurePolicy + HITL 事件；`continue` 写 Resolved |
+
+**已知脱节（必须 PR-F 修）：**
+
+- `meeting_payload` 仍无 `guest_slots` / `hitl` / `failure_policy` / `partial_warnings`
+- `build_council_status` 仍从 `guest_completed` 推断状态 → `fail_fast` 下 Skipped 嘉宾会显示为 running
+- Web `owner_continue` 已走 `cmd_continue`（会写 Resolved），但前端无 HITL reason 展示
+
+### 各方立场摘要
+
+**Grok：** 控制面（CLI/events/state）已齐，**最大风险是 Web 再次与后端语义脱节**。PR-F 应「API 契约优先、UI 次之」：先让 `meeting_payload` 与 `status` 字段对齐，再改 speaker strip。顺序维持 **F → D → E**，不提前做 Executor 策略。
+
+**Codex：** 同意 F 优先。`build_council_status` **必须以 `guest_slots` 为主、`guest_completed` 为回退**，并加 `tests/app/test_web_slot_contract.py` 锁契约。`rc-*` → executor `guest_id` 映射应集中在 `role_cards.py`/`hosting.py` 单测，禁止 UI 内联字符串规则。PR-F **不**改 Platform；**不**在本 PR 实现 `require_before_promote`（仍延后）。
+
+**Claude：** 同意。Web 层禁止重算 slot 逻辑，只读 payload。`meeting_payload` 读取时应调用 `apply_guest_slots_projection` + `apply_hitl_projection`（与 `cmd_status` 一致）。partial 警告用摘要数组即可，不必做新页面。若 PR-F 超 400 行，可拆 **F1 契约 + F2 样式**，但优先单 PR 交付可测契约。
+
+### 一致采纳（PR-F 可执行范围）
+
+| 项 | 决定 |
+|----|------|
+| **顺序** | **F → D → E** 不变；**不**插入 PR-C.1（promote 拦截） |
+| **F1 后端** | `meeting_payload` 增加：`guest_slots`、`hitl`、`failure_policy`、`partial_warnings`（摘要） |
+| **F2 状态** | `build_council_status` 优先读 slot `phase`（Succeeded/Running/Failed/Skipped/Pending） |
+| **F3 前端** | speaker strip 展示 phase + 错误；`owner_required` 旁显示 `hitl.reason`；continue 按钮逻辑不变 |
+| **F4 测试** | `test_web_slot_contract.py` + `rc-*` guest_id 映射；`COUNCIL_MOCK=1` API 冒烟 |
+| **不做** | 新 reconcile 循环、generation、Platform 改动、`require_before_promote` |
+
+### 分歧与裁决
+
+| 分歧 | 裁决 |
+|------|------|
+| Codex：F 是否强制刷新投影再返回 payload | **采纳** — `meeting_payload` 内投影，保证轮询一致 |
+| Claude：是否在 F 加 Web 配置 failure_policy | **延后** — 先只读展示；改 policy 仍走 CLI `start --failure-policy` |
+| Grok：F 后是否立刻 D | **采纳 Codex** — F 验收后再 D；D 与 Web 无硬依赖 |
+
+### PR-F 开工清单（复制即用）
+
+- [ ] `service.meeting_payload`：投影 slots/hitl + 四字段暴露
+- [ ] `chat.build_council_status`：slot phase 驱动；Skipped/Failed 文案
+- [ ] `web/static/app.js` + `style.css`：strip 与 HITL 条
+- [ ] `tests/app/test_web_slot_contract.py`
+- [ ] `./scripts/ci.sh` 全绿 + 中文 commit
+
+### PR-F 之后（备忘，本次不开工）
+
+- **PR-D：** `executor_policy.py` + strict/mock 对齐 + 并行上限配置化
+- **PR-E：** claims envelope `schema_version` + `claim verify` 扩展
+- **可选 PR-C.2：** `require_before_promote` 拦截（独立小 PR，不挡 F/D）
