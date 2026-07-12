@@ -198,6 +198,7 @@ sudo systemctl enable --now council-daily.timer        # 定时日频
 | 主张列表 | `./council.sh claim list` |
 | 账本校验 | `./council.sh claim verify` |
 | 实验对照 | `python3 apps/research_council/scripts/compare_meetings.py <id_a> <id_b>` |
+| **实验归档** | `./scripts/archive_meeting_experiment.sh [meeting_id] [--baseline <id>]` |
 | 黄金复验 | `./scripts/run_gold_revalidation_cli.sh`（真实 CLI，Owner 择机） |
 
 ---
@@ -211,6 +212,32 @@ sudo systemctl enable --now council-daily.timer        # 定时日频
 | `daemon daily` skipped | 无活跃会话或 state 损坏；`check` 看 `issues` |
 | Guest mock 污染 | 确认未设 `COUNCIL_MOCK`；大模型并行数见 EXPERIMENTS §2（3–5 人） |
 | 并行按钮无响应 | 看左栏「运行中」任务条；查 `meetings/<id>/errors/` |
+
+---
+
+## 8.1 实验归档（P6-3）
+
+会议结束后一键汇总指标、分析与可选基线对比：
+
+```bash
+# 当前会议（.current_meeting）
+./scripts/archive_meeting_experiment.sh
+
+# 指定会议 + 基线对照
+./scripts/archive_meeting_experiment.sh meet-20260712-145503 \
+  --baseline meet-20260710-015200
+
+# 仅打包已有 metrics（不重新计算）
+./scripts/archive_meeting_experiment.sh meet-20260712-145503 --no-refresh-metrics
+```
+
+**写入 `meetings/<id>/`：**
+
+| 文件 | 内容 |
+|------|------|
+| `experiment_archive.json` | 分析 + metrics + 语义闭环状态 + 产物索引 |
+| `metrics.json` / `metrics.md` | 刷新或保留 |
+| `quality_comparison.md` | 仅当指定 `--baseline` |
 
 ---
 

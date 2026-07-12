@@ -44,6 +44,7 @@ Claimfold/
 │       ├── web/                    # 会议室 Web UI（server.py + static/）
 │       └── scripts/                # fetch_equity、compare_meetings 等
 ├── scripts/
+│   ├── archive_meeting_experiment.sh # 实验归档（metrics + 对比 + experiment_archive.json）
 │   ├── install_editable.sh         # 推荐：pip install -e platform + research-council
 │   ├── ci.sh                       # 本地 CI 门禁（调用 install_editable.sh）
 │   ├── check_platform_boundary.sh  # missionos + platform_smoke 边界扫描
