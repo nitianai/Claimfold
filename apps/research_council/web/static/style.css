@@ -1090,6 +1090,90 @@ button.small {
   transform: none;
 }
 
+.daily-wizard {
+  background: linear-gradient(180deg, rgba(15, 118, 110, 0.06) 0%, transparent 100%);
+}
+
+.wizard-steps {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wizard-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.45);
+  color: var(--muted);
+  transition: border-color 0.2s var(--ease), background 0.2s var(--ease), color 0.2s var(--ease);
+}
+
+.wizard-step-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid var(--line);
+  background: var(--bg-elevated);
+  flex: 0 0 auto;
+}
+
+.wizard-step.active {
+  border-color: rgba(15, 118, 110, 0.35);
+  background: var(--accent-soft);
+  color: var(--ink-soft);
+}
+
+.wizard-step.active .wizard-step-num {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.wizard-step.done {
+  border-color: rgba(21, 128, 61, 0.28);
+  background: var(--green-soft);
+  color: var(--ink-soft);
+}
+
+.wizard-step.done .wizard-step-num {
+  border-color: var(--green);
+  background: var(--green);
+  color: #fff;
+}
+
+.wizard-step.error {
+  border-color: rgba(220, 38, 38, 0.3);
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.wizard-step.error .wizard-step-num {
+  border-color: var(--red);
+  background: var(--red);
+  color: #fff;
+}
+
+.wizard-launch {
+  width: 100%;
+}
+
+.wizard-hint {
+  margin: 10px 0 0;
+}
+
 .task-indicator {
   display: flex;
   align-items: center;

@@ -1,6 +1,8 @@
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
 
+const DAILY_PRESET_GUESTS = ["rates-strategist", "quant-researcher", "industry-analyst"];
+
 const state = {
   meeting: null,
   roleCards: [],
@@ -9,6 +11,8 @@ const state = {
   editingCardId: "",
   libraryDomain: "all",
   pollTimer: null,
+  dailyLaunching: false,
+  wizardErrorStep: "",
 };
 
 function toast(msg, isError = false) {
@@ -332,6 +336,7 @@ function applyMeeting(m) {
   updateHeader(m);
   setTaskIndicator(m?.task);
   renderMeetingList();
+  renderWizardSteps(m);
 }
 
 function setTaskIndicator(task) {
@@ -340,7 +345,153 @@ function setTaskIndicator(task) {
     const labels = { context: "生成上下文…", run_parallel: "并行讨论…", run_interactive: "交互话轮…" };
     $("#task-text").textContent = labels[task.task] || "运行中…";
     startPolling();
-  } else if (task?.error) toast(task.error, true);
+  } else if (task?.error) {
+    toast(task.error, true);
+    if (state.dailyLaunching) {
+      state.wizardErrorStep = task.task === "context" ? "scope" : "launch";
+      state.dailyLaunching = false;
+      renderWizardSteps(state.meeting);
+    }
+  }
+  renderWizardSteps(state.meeting);
+}
+
+function wizardChecks() {
+  const topic = $("#topic-input").value.trim();
+  const scope = $("#scope-input").value.trim();
+  const guests = invitedSet(state.meeting).size;
+  const active = !!state.meeting?.active && state.meeting?.status !== "stopped";
+  const round = state.meeting?.round || 0;
+  const task = state.meeting?.task;
+  return { topic, scope, guests, active, round, task };
+}
+
+function renderWizardSteps(m) {
+  const box = $("#wizard-steps");
+  const launchBtn = $("#btn-daily-launch");
+  const hint = $("#wizard-hint");
+  if (!box || !launchBtn) return;
+
+  const { topic, scope, guests, active, round, task } = wizardChecks();
+  const steps = {
+    topic: !!topic,
+    scope: !!scope,
+    guests: guests > 0,
+    launch: active && (round > 0 || task?.task === "run_parallel"),
+  };
+  const nextStep = !topic ? "topic" : !scope ? "scope" : guests < 1 ? "guests" : "launch";
+
+  box.querySelectorAll(".wizard-step").forEach((el) => {
+    const key = el.dataset.step;
+    el.classList.remove("active", "done", "error");
+    if (state.wizardErrorStep === key) {
+      el.classList.add("error");
+    } else if (steps[key]) {
+      el.classList.add("done");
+    } else if (key === nextStep && !active) {
+      el.classList.add("active");
+    }
+  });
+
+  const busy = state.dailyLaunching || !!task?.running;
+  launchBtn.disabled = busy || active;
+  if (active) {
+    hint.textContent = round > 0 ? "会议已启动，可在主区继续并行讨论" : "会议进行中，等待首轮完成…";
+  } else if (state.dailyLaunching) {
+    hint.textContent = "正在执行启动流程，请勿关闭页面…";
+  } else if (!topic || !scope) {
+    hint.textContent = "填写议题与上下文范围后，将自动邀请推荐嘉宾";
+  } else if (guests < 1) {
+    hint.textContent = "将邀请推荐嘉宾：利率策略师 · GPT-OSS · 大宗分析师";
+  } else {
+    hint.textContent = `已选 ${guests} 位嘉宾，点击一键启动`;
+  }
+}
+
+function applyDailyPresets() {
+  if (state.meeting?.active) return;
+  for (const cid of DAILY_PRESET_GUESTS) {
+    if (cardById(cid)) state.pendingInvited.add(cid);
+  }
+}
+
+async function waitForTaskIdle({ timeoutMs = 600000 } = {}) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const m = await api("/api/meeting/current");
+    applyMeeting(m);
+    const task = m.task || {};
+    if (task.error) throw new Error(task.error);
+    if (!task.running) return m;
+    await new Promise((r) => setTimeout(r, 2000));
+  }
+  throw new Error("任务超时，请稍后重试");
+}
+
+async function runDailyLaunch() {
+  if (state.meeting?.active || state.dailyLaunching) return;
+
+  const topic = $("#topic-input").value.trim();
+  if (!topic) {
+    state.wizardErrorStep = "topic";
+    renderWizardSteps(state.meeting);
+    return toast("请输入议题", true);
+  }
+  const scope = $("#scope-input").value.trim();
+  if (!scope) {
+    state.wizardErrorStep = "scope";
+    renderWizardSteps(state.meeting);
+    return toast("请填写上下文范围", true);
+  }
+
+  applyDailyPresets();
+  const invited = [...invitedSet(state.meeting)];
+  if (!invited.length) {
+    state.wizardErrorStep = "guests";
+    renderWizardSteps(state.meeting);
+    return toast("请先邀请至少一位角色", true);
+  }
+
+  state.wizardErrorStep = "";
+  state.dailyLaunching = true;
+  renderWizardSteps(state.meeting);
+
+  $("#meeting-mode").value = "research";
+  $("#meeting-type-label").textContent = "并行研究会议";
+  $("#chk-run-context").checked = true;
+
+  try {
+    const res = await api("/api/meeting/start", {
+      method: "POST",
+      body: JSON.stringify({
+        topic,
+        mode: "research",
+        owner_question: topic,
+        context_scope: scope,
+        run_context_after: true,
+        invited_card_ids: invited,
+      }),
+    });
+    if (!res.ok) throw new Error(res.error);
+    state.pendingInvited.clear();
+    await refreshAll();
+    startPolling();
+
+    const runContext = $("#chk-run-context").checked;
+    if (runContext) await waitForTaskIdle();
+
+    const parallelRes = await api("/api/run-parallel", { method: "POST", body: "{}" });
+    if (!parallelRes.ok) throw new Error(parallelRes.error);
+    toast("研究会议已启动，首轮并行讨论进行中");
+    startPolling();
+  } catch (err) {
+    state.wizardErrorStep = "launch";
+    toast(err.message, true);
+  } finally {
+    state.dailyLaunching = false;
+    await refreshAll().catch(() => {});
+    renderWizardSteps(state.meeting);
+  }
 }
 
 function startPolling() {
@@ -496,6 +647,7 @@ async function inviteCard(cardId) {
   renderInvitedChips(state.meeting);
   renderSpeakers(state.meeting);
   renderSummary(state.meeting);
+  renderWizardSteps(state.meeting);
   renderAgentLibrary($("#agent-search").value);
   toast(`${cardById(cardId)?.name || cardId} 已加入会议`);
 }
@@ -512,6 +664,7 @@ async function uninviteCard(cardId) {
   renderInvitedChips(state.meeting);
   renderSpeakers(state.meeting);
   renderSummary(state.meeting);
+  renderWizardSteps(state.meeting);
   renderAgentLibrary($("#agent-search").value);
 }
 
@@ -633,6 +786,13 @@ async function publishAgenda() {
 }
 
 $("#btn-add-agenda").addEventListener("click", () => publishAgenda().catch((e) => toast(e.message, true)));
+$("#btn-daily-launch").addEventListener("click", () => runDailyLaunch().catch((e) => toast(e.message, true)));
+for (const id of ["topic-input", "scope-input"]) {
+  $(`#${id}`)?.addEventListener("input", () => {
+    state.wizardErrorStep = "";
+    renderWizardSteps(state.meeting);
+  });
+}
 $("#meeting-mode").addEventListener("change", (e) => {
   $("#meeting-type-label").textContent = e.target.selectedOptions[0].textContent;
 });
@@ -726,6 +886,11 @@ $("#btn-save-runtime-policy").addEventListener("click", async () => {
 (async function init() {
   try {
     await refreshAll();
+    applyDailyPresets();
+    renderInvitedChips(state.meeting);
+    renderSpeakers(state.meeting);
+    renderSummary(state.meeting);
+    renderWizardSteps(state.meeting);
     if (state.meeting?.active) startPolling();
   } catch (err) {
     toast("加载失败: " + err.message, true);

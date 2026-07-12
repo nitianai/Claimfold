@@ -28,6 +28,36 @@
         </div>
       </div>
 
+      <section class="section daily-wizard" id="daily-wizard">
+        <div class="section-head">
+          <h2>日常启动向导</h2>
+          <span class="muted">研究会议</span>
+        </div>
+        <ol class="wizard-steps" id="wizard-steps" aria-label="启动步骤">
+          <li class="wizard-step" data-step="topic">
+            <span class="wizard-step-num">1</span>
+            <span class="wizard-step-label">填写议题</span>
+          </li>
+          <li class="wizard-step" data-step="scope">
+            <span class="wizard-step-num">2</span>
+            <span class="wizard-step-label">上下文范围</span>
+          </li>
+          <li class="wizard-step" data-step="guests">
+            <span class="wizard-step-num">3</span>
+            <span class="wizard-step-label">邀请嘉宾</span>
+          </li>
+          <li class="wizard-step" data-step="launch">
+            <span class="wizard-step-num">4</span>
+            <span class="wizard-step-label">启动并跑首轮</span>
+          </li>
+        </ol>
+        <button class="primary glow wizard-launch" id="btn-daily-launch" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
+          一键启动并跑首轮
+        </button>
+        <p class="wizard-hint muted" id="wizard-hint">推荐嘉宾：利率策略师 · GPT-OSS · 大宗分析师</p>
+      </section>
+
       <section class="section">
         <div class="section-head">
           <h2>议题</h2>
@@ -49,13 +79,13 @@
       <section class="section">
         <div class="section-head">
           <h2>会议设置</h2>
-          <span class="muted" id="meeting-type-label">投资研讨会</span>
+          <span class="muted" id="meeting-type-label">并行研究会议</span>
         </div>
         <div class="field">
           <label for="meeting-mode">会议类型</label>
           <select id="meeting-mode">
             <option value="interactive">投资研讨会（交互话轮）</option>
-            <option value="research">并行研究会议</option>
+            <option value="research" selected>并行研究会议</option>
           </select>
         </div>
         <label class="check-row">

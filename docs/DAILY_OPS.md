@@ -35,17 +35,30 @@ cd /path/to/Claimfold
 # 浏览器打开 http://127.0.0.1:8787
 ```
 
-### 2.2 标准流程（左栏 → 主区）
+### 2.2 标准流程（推荐：日常启动向导）
+
+左栏顶部的 **日常启动向导** 将研究会议收口为四步：
+
+| 步骤 | UI | 等价 CLI |
+|------|-----|----------|
+| 1 | 填写**议题** | `start --topic …` |
+| 2 | 填写**上下文范围** | `context --scope …` |
+| 3 | 邀请嘉宾（默认推荐 3 位：利率策略师 / GPT-OSS / 大宗分析师） | `select` |
+| 4 | 点击 **一键启动并跑首轮** | `start` + `context` + `run-parallel` |
+
+向导会自动：会议类型 **并行研究会议**、勾选 **创建后自动生成共享上下文**、等待 context 完成后触发首轮 `run-parallel`。步骤状态与错误通过左栏步骤条 + toast 可见。
+
+**手动路径（与向导等价）：**
 
 | 步骤 | UI 操作 | 等价 CLI |
 |------|---------|----------|
-| 1 | 左栏填写**议题**、**上下文范围** | `start` + `context` |
-| 2 | 会议类型选 **并行研究会议** | `--mode research` |
+| 1 | 左栏填写议题、上下文范围 | `start` + `context` |
+| 2 | 会议类型选并行研究会议 | `--mode research` |
 | 3 | 勾选「创建后自动生成共享上下文」 | `context` |
-| 4 | **邀请已有角色**（至少 1 位） | `select` |
-| 5 | 点击议题旁 **+** 发布 | `POST /api/meeting/start` |
+| 4 | 邀请已有角色（至少 1 位） | `select` |
+| 5 | 点击议题旁 **+** 发布，或用手动向导外的发布 | `POST /api/meeting/start` |
 | 6 | 主区 **并行讨论**（可点 2 次做双轮语义闭环） | `run-parallel` ×2 |
-| 7 | 右栏查看运行策略 / HITL；必要时 **继续** | `continue` |
+| 7 | 右栏运行策略 / HITL；必要时 **继续** | `continue` |
 | 8 | **结束** | `stop` |
 
 **API 对照（调试 / 脚本）：**
@@ -53,7 +66,7 @@ cd /path/to/Claimfold
 ```bash
 # 启动（含 context）
 curl -sX POST http://127.0.0.1:8787/api/meeting/start -H 'Content-Type: application/json' \
-  -d '{"topic":"未来一周黄金走势","mode":"research","context_scope":"黄金、美元、美债","run_context_after":true,"invited_card_ids":["rc-nemo","rc-gptoss20"]}'
+  -d '{"topic":"未来一周黄金走势","mode":"research","context_scope":"黄金、美元、美债","run_context_after":true,"invited_card_ids":["rates-strategist","quant-researcher","industry-analyst"]}'
 
 # 并行一轮
 curl -sX POST http://127.0.0.1:8787/api/run-parallel -H 'Content-Type: application/json' -d '{}'
