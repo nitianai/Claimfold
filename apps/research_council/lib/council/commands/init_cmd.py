@@ -33,10 +33,11 @@ def cmd_init(_: argparse.Namespace) -> None:
         d.mkdir(parents=True, exist_ok=True)
     ensure_claims_dir(DATA_ROOT)
 
+    # Fresh installs copy config/guests.yaml.template (kept in sync with guests.yaml).
     init_config = ""
-    if INIT_CONFIG_TEMPLATE.exists():
+    if INIT_CONFIG_TEMPLATE.is_file():
         init_config = INIT_CONFIG_TEMPLATE.read_text(encoding="utf-8")
-    elif CONFIG_FILE.exists():
+    elif CONFIG_FILE.is_file():
         init_config = CONFIG_FILE.read_text(encoding="utf-8")
     else:
         init_config = "max_parallel: 6\nguests: {}\n"
@@ -128,7 +129,7 @@ def cmd_init(_: argparse.Namespace) -> None:
     for path, content in defaults.items():
         if not path.exists():
             path.write_text(content, encoding="utf-8")
-            created.append(str(path.relative_to(ROOT)))
+            created.append(str(path.relative_to(APP_ROOT)))
 
     print("Council Engine initialized.")
     if created:

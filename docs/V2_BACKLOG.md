@@ -47,7 +47,7 @@
 | P6-1 | Web 日常流收口 | 启动向导（议题 → context scope → 嘉宾 → 首轮 parallel）UI 与 API 一条龙；错误态可见 | P5 |
 | P6-2 | 日常运行手册 | `docs/DAILY_OPS.md`：`council-web.sh`、`council-daemon.sh watch`、`run-daily`、systemd 示例 | ✅ |
 | P6-3 | 实验归档脚本 | `scripts/archive_meeting_experiment.sh` → `experiment_archive.json` + metrics + 可选 `quality_comparison.md` | ✅ |
-| P6-4 | `cmd_init` 卫生 | 默认嘉宾去掉已下线模型名（审计报告 §12） | — |
+| P6-4 | `cmd_init` 卫生 | `guests.yaml.template` 与生产同步 + 下线模型门禁测试 | ✅ |
 | P6-5 | 可选：release 门禁 | tag `v0.2.x` 前跑 `run_gold_revalidation_cli.sh`（Owner 择机，非 CI 强制） | P6-3 |
 
 **说明：** Web 已有 `POST /api/meeting/start`（含 `run_context_after`）；P6-1 重点是**默认日常路径**与 UI 引导，而非从零造 API。
@@ -87,3 +87,4 @@ P5-1 + P5-2（本批）→ P5-3…P5-6 → P6-2 文档 → P6-1 Web → P6-3 归
 | 2026-07-12 | Phase 5 收尾：boundary 扩展、install 文档、`missionos-v0.1` tag、shim allowlist |
 | 2026-07-12 | P6-2：`docs/DAILY_OPS.md` 日常运行手册 |
 | 2026-07-12 | P6-3：`archive_meeting_experiment.sh` 实验归档脚本 |
+| 2026-07-12 | P6-4：`guests.yaml.template` 同步 + `test_init_guest_template.py` |
