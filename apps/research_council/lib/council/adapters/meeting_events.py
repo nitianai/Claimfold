@@ -79,6 +79,25 @@ def publish_round_started(
     )
 
 
+def publish_executor_denied(
+    log: MeetingEventLog,
+    *,
+    round_num: int,
+    guest: str,
+    kind: str,
+    reason: str,
+    command: str = "",
+) -> None:
+    log.append(
+        "ExecutorDenied",
+        round=round_num,
+        guest=guest,
+        kind=kind,
+        reason=reason,
+        command=(command or "")[:200],
+    )
+
+
 def publish_guest_completed(log: MeetingEventLog, entry: dict[str, Any]) -> None:
     log.append(
         "guest_completed",

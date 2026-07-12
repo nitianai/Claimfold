@@ -597,7 +597,8 @@ COUNCIL_MOCK=1 ./council.sh run-parallel
 - [x] **PR-B：** `slots.py` + events 写入 + parallel/interactive 共用 + `status`/`repair-slots`（`1cbc9e8`）
 - [x] **PR-C：** FailurePolicy 三态 + `OwnerInterruptRaised/Resolved`；不拦 promote（`80a005e`）
 - [x] **PR-F：** Web 消费 slot/HITL；`rc-*` 映射测试
-- [ ] **PR-D / E：** 按原文档；每步 `ci.sh` + `check_platform_boundary.sh`
+- [x] **PR-D：** `executor_policy` inspect_invoke + ExecutorDenied + 并行上限别名
+- [ ] **PR-E：** 账本 envelope + `claim verify` 扩展
 
 ---
 
@@ -652,8 +653,8 @@ COUNCIL_MOCK=1 ./council.sh run-parallel
 - [x] `tests/app/test_web_slot_contract.py`
 - [x] `./scripts/ci.sh` 全绿 + 中文 commit
 
-### PR-F 之后（备忘，本次不开工）
+### PR-D / E 备忘
 
-- **PR-D：** `executor_policy.py` + strict/mock 对齐 + 并行上限配置化
-- **PR-E：** claims envelope `schema_version` + `claim verify` 扩展
+- [x] **PR-D：** `executor_policy.py` inspect_invoke + ExecutorDenied + `max_parallel_guests` 别名
+- [ ] **PR-E：** claims envelope `schema_version` + `claim verify` 扩展
 - **可选 PR-C.2：** `require_before_promote` 拦截（独立小 PR，不挡 F/D）

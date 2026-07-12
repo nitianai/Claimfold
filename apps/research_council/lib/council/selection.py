@@ -28,7 +28,8 @@ def load_full_config(config_path: Path) -> dict[str, Any]:
 
 
 def max_parallel_from_config(cfg: dict[str, Any]) -> int:
-    return clamp_int(cfg.get("max_parallel", 3), default=3, min_val=1, max_val=8)
+    raw = cfg.get("max_parallel_guests", cfg.get("max_parallel", 3))
+    return clamp_int(raw, default=3, min_val=1, max_val=8)
 
 
 def select_guests_for_focus(

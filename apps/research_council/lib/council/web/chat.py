@@ -32,6 +32,7 @@ _EVENT_LABELS = {
     "guest_slot_updated": "嘉宾槽状态更新",
     "OwnerInterruptRaised": "需主持人介入",
     "OwnerInterruptResolved": "主持人已放行",
+    "ExecutorDenied": "执行器被拒绝",
 }
 
 

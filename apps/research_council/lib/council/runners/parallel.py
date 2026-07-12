@@ -30,6 +30,7 @@ from council.selection import load_full_config, max_parallel_from_config
 from council.verify import verify_research_semantic_loop
 from missionos.utils import clamp_int, utc_now
 
+from council.adapters.executor_policy import ExecutorDeniedError
 from council.cli_runner import invoke_cli, invoke_script
 from council.config import CONFIG_FILE, DATA_ROOT
 from council.formatting import round_tag
@@ -70,6 +71,7 @@ def process_parallel_guest(
     guest_name: str,
     round_num: int,
     snapshot: RoundContextSnapshot,
+    event_log: Any | None = None,
 ) -> dict[str, Any]:
     t0 = time.time()
     paths = artifact_paths_research(meeting_dir, round_num, guest_name, round_tag)
@@ -120,6 +122,9 @@ def process_parallel_guest(
                 guest=guest_name,
                 kind="guest",
                 timeout_seconds=timeout,
+                meeting_dir=meeting_dir,
+                event_log=event_log,
+                guest_cfg=guest_cfg,
             )
             if raw_mock:
                 raw_output = generate_mock_research_output(
@@ -180,6 +185,18 @@ def process_parallel_guest(
             "raw_output_path": str(paths["raw"].relative_to(meeting_dir)),
             "summary_md_path": str(paths["summary_md"].relative_to(meeting_dir)),
             "summary_json_path": str(paths["summary_json"].relative_to(meeting_dir)),
+        }
+    except ExecutorDeniedError as exc:
+        duration = round(time.time() - t0, 1)
+        err_path = paths.get("error")
+        return {
+            "guest": guest_name,
+            "success": False,
+            "error": exc.reason,
+            "executor_denied": True,
+            "duration_s": duration,
+            "error_path": str(err_path.relative_to(meeting_dir)) if err_path and err_path.exists() else "",
+            "respond_events": [],
         }
     except Exception as exc:
         duration = round(time.time() - t0, 1)
@@ -256,6 +273,7 @@ def run_one_parallel_round(meeting_dir: Path, *, quiet: bool = False) -> str | N
             guest_name=guest_name,
             round_num=round_num,
             snapshot=snapshot,
+            event_log=event_log,
         )
         finalize_guest_slot(
             event_log,
