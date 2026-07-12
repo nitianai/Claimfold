@@ -571,6 +571,7 @@ COUNCIL_MOCK=1 ./council.sh run-parallel
 | 2026-07-11 | §14：A/B/C 落地后二次审议，收窄 PR-F 范围、确认 F→D→E 不变 |
 | 2026-07-12 | §15：F/D 落地后三次审议，收窄 PR-E、宣布进化方案 v1 收尾路径 |
 | 2026-07-12 | PR-E 落地：claim envelope + verify 不变量 + export bundle；v1 Implemented |
+| 2026-07-12 | §16：PR-C.2 require_before_promote + Web 运行策略可编辑 |
 
 ---
 
@@ -704,14 +705,15 @@ COUNCIL_MOCK=1 ./council.sh run-parallel
 | Grok：E 完成后是否立刻 push `main` | **建议** — E + 文档后 push；实现 Agent 不强制 |
 | Claude：export 可否延后 | **否决** — 原文档 PR-E 含 export；保持轻量脚本一并交付 |
 
-### v1 完成之后（backlog，本次不开工）
+### v1 完成之后（backlog）
 
-| 项 | 说明 |
+| 项 | 状态 |
 |----|------|
-| PR-C.2 | `require_before_promote` 拦截 promote |
-| Hotfix | 并行 RESPOND 后单次 `rebuild_index`（审计 P1） |
-| PR3 | scenario `meeting_plan` runner 读 plan（已有文档） |
-| Web | failure_policy 可编辑（CLI 只读已够 v1） |
+| Hotfix `rebuild_index` | ✅ `append_claim_events_batch`（`80ba162`） |
+| PR3 plan runner | ✅ `resolve_runtime_plan`（`80ba162`） |
+| PR-C.2 `require_before_promote` | ✅ §16 |
+| Web failure_policy 可编辑 | ✅ §16 |
+| 实验对照 | 待做 — 见 `docs/EXPERIMENTS.md` |
 
 ### PR-E 开工清单（复制即用）
 
@@ -724,3 +726,32 @@ COUNCIL_MOCK=1 ./council.sh run-parallel
 ### 进化方案 v1 完成定义
 
 当 PR-E 合并且 CI 绿时，视为 `docs/EVOLUTION_PLAN.md` **v1 实现完成**；后续需求新开 backlog 或 v2 文档，不再在本文件堆 PR-F/G。
+
+---
+
+## §16 四方审议（2026-07-12 — backlog 收尾：PR-C.2 + Web 策略）
+
+> **背景：** v1 后 backlog 按序推进：Hotfix 与 PR3 已落地（`80ba162`）。本次审议 PR-C.2 与 Web 策略编辑。
+
+### 各方立场摘要
+
+**Grok：** PR-C.2 应小而硬——仅在 `require_before_promote=true` **且** `owner_required=true` 时拒绝 `claim promote`；`--owner-override` **不**绕过 HITL 闸门（须先 `continue`）。Web 侧只改运行中会议的 `failure_policy` / `require_before_promote`，不改历史 ledger。
+
+**Codex：** 逻辑集中在 `failure_policy.validate_promote_hitl_gate` + `cmd_claim_promote` 入口；`start --require-before-promote` 写入 `hitl` 初始值。Web API `POST /api/meeting/runtime-policy` 复用 `update_runtime_policy_fields`，选项列表从 `FAILURE_POLICIES` 导出，契约测试锁死。
+
+**Claude：** 同意。Web UI 放右栏「运行策略」面板，会议 `stopped` 时禁用编辑；与 §14「failure_policy 延后」闭环。实验对照单列，不塞进本 PR。
+
+### 一致采纳
+
+| 项 | 决定 |
+|----|------|
+| **PR-C.2** | `validate_promote_hitl_gate`；`start --require-before-promote`；`test_require_before_promote.py` |
+| **Web** | `update_runtime_policy` + `/api/meeting/runtime-policy` + 右栏 UI |
+| **不做** | promote 的 owner_override 绕过 HITL；实验跑批；Platform 改动 |
+
+### 分歧与裁决
+
+| 分歧 | 裁决 |
+|------|------|
+| Codex：运行中改 `failure_policy` 是否影响已完成轮次 | **采纳** — 仅影响后续轮次；文档/UI 标注 |
+| Grok：Web 是否在 start 时暴露 require 开关 | **部分采纳** — start 仍走 CLI flag；Web 会中可调 |

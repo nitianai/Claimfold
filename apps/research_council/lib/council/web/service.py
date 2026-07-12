@@ -21,6 +21,7 @@ from council.config import CONFIG_FILE, CURRENT_MEETING_FILE, DATA_ROOT, MEETING
 
 from council.guests import guest_roster, load_guests, load_guests_for_meeting
 from council.guest_aliases import GUEST_ALIASES
+from council.failure_policy import FAILURE_POLICIES, update_runtime_policy_fields
 from council.hitl import apply_hitl_projection
 from council.slots import apply_guest_slots_projection
 from council.state_store import load_state, save_state
@@ -148,6 +149,7 @@ class CouncilWebService:
             "meeting_mode": state.get("meeting_mode", ""),
             "owner_required": state.get("owner_required", False),
             "failure_policy": state.get("failure_policy", "allow_partial"),
+            "failure_policy_options": sorted(FAILURE_POLICIES),
             "hitl": state.get("hitl") or {},
             "guest_slots": state.get("guest_slots") or {},
             "partial_warnings": state.get("partial_warnings") or [],
@@ -538,6 +540,29 @@ class CouncilWebService:
         except SystemExit as exc:
             return {"ok": False, "error": str(exc) or "记录失败"}
         return {"ok": True, "meeting": self.meeting_payload()}
+
+    def update_runtime_policy(
+        self,
+        *,
+        failure_policy: str | None = None,
+        require_before_promote: bool | None = None,
+    ) -> dict[str, Any]:
+        meeting_dir = self.try_current_meeting_dir()
+        if meeting_dir is None:
+            return {"ok": False, "error": "无活动会议"}
+        state = load_state(meeting_dir)
+        if state.get("status") == "stopped":
+            return {"ok": False, "error": "会议已结束，无法修改策略"}
+        try:
+            update_runtime_policy_fields(
+                state,
+                failure_policy=failure_policy,
+                require_before_promote=require_before_promote,
+            )
+        except ValueError as exc:
+            return {"ok": False, "error": str(exc)}
+        save_state(meeting_dir, state)
+        return {"ok": True, "meeting": self.meeting_payload(meeting_dir)}
 
     def owner_continue(self) -> dict[str, Any]:
         try:

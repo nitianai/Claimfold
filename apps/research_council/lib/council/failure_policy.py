@@ -18,15 +18,58 @@ def resolve_failure_policy(state: dict[str, Any]) -> str:
     return policy
 
 
-def default_hitl_config(owner_pause: int) -> dict[str, Any]:
+def default_hitl_config(
+    owner_pause: int,
+    *,
+    require_before_promote: bool = False,
+) -> dict[str, Any]:
     return {
         "every_n_rounds": owner_pause,
-        "require_before_promote": False,
+        "require_before_promote": require_before_promote,
         "open": False,
         "reason": "",
         "round": 0,
         "last_resolved_action": "",
     }
+
+
+def require_before_promote_enabled(state: dict[str, Any]) -> bool:
+    hitl = state.get("hitl") or {}
+    return bool(hitl.get("require_before_promote"))
+
+
+def validate_promote_hitl_gate(state: dict[str, Any]) -> list[str]:
+    """当 require_before_promote 且 owner_required 时拒绝晋升。"""
+    if not require_before_promote_enabled(state):
+        return []
+    if not state.get("owner_required"):
+        return []
+    hitl = state.get("hitl") or {}
+    reason = str(hitl.get("reason") or "owner_required")
+    return [
+        f"Owner 闸门开启（{reason}）：请先 ./council.sh continue 再晋升主张"
+    ]
+
+
+def update_runtime_policy_fields(
+    state: dict[str, Any],
+    *,
+    failure_policy: str | None = None,
+    require_before_promote: bool | None = None,
+) -> None:
+    ensure_runtime_policy_fields(state)
+    if failure_policy is not None:
+        policy = str(failure_policy).strip()
+        if policy not in FAILURE_POLICIES:
+            raise ValueError(
+                f"Invalid failure_policy: {policy} "
+                f"(allowed: {', '.join(sorted(FAILURE_POLICIES))})"
+            )
+        state["failure_policy"] = policy
+    if require_before_promote is not None:
+        hitl = dict(state.get("hitl") or default_hitl_config(state.get("max_round_before_owner", 3)))
+        hitl["require_before_promote"] = bool(require_before_promote)
+        state["hitl"] = hitl
 
 
 def ensure_runtime_policy_fields(state: dict[str, Any]) -> None:

@@ -50,6 +50,7 @@ def _scenario_start_state(
     stale_limit: int,
     roster: list[str],
     failure_policy: str = DEFAULT_FAILURE_POLICY,
+    require_before_promote: bool = False,
 ) -> dict[str, Any]:
     first_role_id, first_executor_id = first_stage_binding(plan)
     try:
@@ -99,7 +100,10 @@ def _scenario_start_state(
         "round_records": [],
         "failure_policy": failure_policy,
         "partial_warnings": [],
-        "hitl": default_hitl_config(owner_pause),
+        "hitl": default_hitl_config(
+            owner_pause,
+            require_before_promote=require_before_promote,
+        ),
     }
 
 
@@ -114,6 +118,7 @@ def _legacy_start_state(
     stale_limit: int,
     roster: list[str],
     failure_policy: str = DEFAULT_FAILURE_POLICY,
+    require_before_promote: bool = False,
 ) -> dict[str, Any]:
     output_format = "json"
     round_mode = "serial"
@@ -157,7 +162,10 @@ def _legacy_start_state(
         "round_records": [],
         "failure_policy": failure_policy,
         "partial_warnings": [],
-        "hitl": default_hitl_config(owner_pause),
+        "hitl": default_hitl_config(
+            owner_pause,
+            require_before_promote=require_before_promote,
+        ),
     }
     if meeting_mode == "investment":
         state["round_agenda"] = INVESTMENT_AGENDA
@@ -191,6 +199,7 @@ def cmd_start(args: argparse.Namespace) -> None:
 
     stale_limit = getattr(args, "stale_limit", 5)
     failure_policy = getattr(args, "failure_policy", DEFAULT_FAILURE_POLICY) or DEFAULT_FAILURE_POLICY
+    require_before_promote = bool(getattr(args, "require_before_promote", False))
     if failure_policy not in FAILURE_POLICIES:
         raise SystemExit(
             f"Invalid --failure-policy: {failure_policy} "
@@ -250,6 +259,7 @@ def cmd_start(args: argparse.Namespace) -> None:
             stale_limit=stale_limit,
             roster=roster,
             failure_policy=failure_policy,
+            require_before_promote=require_before_promote,
         )
     else:
         guests = load_guests()
@@ -266,6 +276,7 @@ def cmd_start(args: argparse.Namespace) -> None:
             stale_limit=stale_limit,
             roster=roster,
             failure_policy=failure_policy,
+            require_before_promote=require_before_promote,
         )
 
     save_state(meeting_dir, state)

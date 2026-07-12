@@ -143,6 +143,27 @@
         </div>
         <div class="guest-list" id="online-list"></div>
       </section>
+      <section class="panel section glass" id="runtime-policy-panel">
+        <div class="section-head">
+          <h2>运行策略</h2>
+          <span class="muted">Owner 可调</span>
+        </div>
+        <div class="policy-form">
+          <div class="field compact">
+            <label for="failure-policy-select">失败策略</label>
+            <select id="failure-policy-select">
+              <option value="allow_partial">allow_partial — 部分成功可继续</option>
+              <option value="all_must_succeed">all_must_succeed — 任一失败暂停</option>
+              <option value="fail_fast">fail_fast — 首个失败跳过后续</option>
+            </select>
+          </div>
+          <label class="checkbox-row">
+            <input type="checkbox" id="require-before-promote" />
+            <span>Owner 闸门期间禁止晋升主张</span>
+          </label>
+          <button class="ghost small" type="button" id="btn-save-runtime-policy">保存策略</button>
+        </div>
+      </section>
       <section class="panel section glass">
         <div class="section-head">
           <h2>总结看板</h2>

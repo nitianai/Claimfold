@@ -142,6 +142,10 @@ class CouncilHandler(BaseHTTPRequestHandler):
             "/api/context": lambda: SERVICE.run_context(str(data.get("scope", ""))),
             "/api/run-parallel": lambda: SERVICE.run_parallel(),
             "/api/run-interactive": lambda: SERVICE.run_interactive(),
+            "/api/meeting/runtime-policy": lambda: SERVICE.update_runtime_policy(
+                failure_policy=data.get("failure_policy"),
+                require_before_promote=data.get("require_before_promote"),
+            ),
             "/api/meeting/speak": lambda: SERVICE.meeting_speak(
                 mode=str(data.get("mode", "ask")),
                 text=str(data.get("text", "")),

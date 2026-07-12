@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import tempfile
 from pathlib import Path
+from unittest import mock
 
 from council.web.chat import build_council_status
 from council.web.role_cards import card_guest_id
@@ -110,6 +111,7 @@ def test_meeting_payload_exposes_slot_hitl_fields():
         _seed_meeting(meeting_dir)
         payload = CouncilWebService().meeting_payload(meeting_dir)
         assert payload["failure_policy"] == "fail_fast"
+        assert "allow_partial" in payload.get("failure_policy_options", [])
         assert payload["guest_slots"]["r001:qoder"]["phase"] == "Skipped"
         assert payload["hitl"]["reason"] == "guest_failure"
         assert payload["owner_required"] is True
@@ -164,3 +166,19 @@ def test_meeting_payload_partial_warnings():
         payload = CouncilWebService().meeting_payload(meeting_dir)
         assert payload["partial_warnings"] == warnings
         assert payload["failure_policy"] == "allow_partial"
+
+
+def test_web_update_runtime_policy():
+    with tempfile.TemporaryDirectory() as tmp:
+        meeting_dir = Path(tmp) / "meet-20260711-163000"
+        _seed_meeting(meeting_dir, state_extra={"owner_required": False})
+        svc = CouncilWebService()
+        with mock.patch.object(svc, "try_current_meeting_dir", return_value=meeting_dir):
+            result = svc.update_runtime_policy(
+                failure_policy="all_must_succeed",
+                require_before_promote=True,
+            )
+        assert result["ok"] is True
+        payload = result["meeting"]
+        assert payload["failure_policy"] == "all_must_succeed"
+        assert payload["hitl"]["require_before_promote"] is True

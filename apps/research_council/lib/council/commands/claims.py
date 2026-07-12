@@ -21,6 +21,7 @@ from council.claims import (
 from missionos.utils import resolve_meeting_path, utc_now
 
 from council.config import CLAIMS_DIR, DATA_ROOT, MEETINGS_DIR
+from council.failure_policy import validate_promote_hitl_gate
 from council.state_store import get_current_meeting_dir, load_state
 
 
@@ -70,6 +71,10 @@ def cmd_claim_promote(args: argparse.Namespace) -> None:
     if index >= len(items):
         raise SystemExit(f"{field}[{index}] 不存在（共 {len(items)} 条）")
     statement = str(items[index]).strip()
+
+    hitl_errors = validate_promote_hitl_gate(state)
+    if hitl_errors:
+        raise SystemExit("晋升拒绝:\n  - " + "\n  - ".join(hitl_errors))
 
     evidence_refs = [e.strip() for e in (args.evidence or []) if e.strip()]
     promo_errors = validate_promotion_candidate(

@@ -271,6 +271,20 @@ function renderDecision(m) {
   box.innerHTML = sec("已确认", m?.confirmed_points) + sec("分歧", m?.conflicts) + sec("未决", m?.open_questions);
 }
 
+function renderRuntimePolicy(m) {
+  const panel = $("#runtime-policy-panel");
+  if (!panel) return;
+  const active = !!m?.active && m?.status !== "stopped";
+  panel.querySelectorAll("select, input, button").forEach((el) => {
+    el.disabled = !active;
+  });
+  if (!active) return;
+  const select = $("#failure-policy-select");
+  if (select && m.failure_policy) select.value = m.failure_policy;
+  const chk = $("#require-before-promote");
+  if (chk) chk.checked = !!(m.hitl && m.hitl.require_before_promote);
+}
+
 function updateHeader(m) {
   const active = !!m?.active;
   ["btn-run-interactive", "btn-run-parallel", "btn-context", "btn-stop"].forEach((id) => {
@@ -288,8 +302,9 @@ function updateHeader(m) {
     renderChat(null);
     renderSummary(m);
     renderDecision(null);
-    renderInvitedChips(m);
-    return;
+  renderInvitedChips(m);
+  renderRuntimePolicy(m);
+  return;
   }
 
   const mode = m.meeting_mode === "interactive" ? "投资研讨会（交互话轮）" : "并行研究会议";
@@ -305,6 +320,7 @@ function updateHeader(m) {
   renderSummary(m);
   renderDecision(m);
   renderInvitedChips(m);
+  renderRuntimePolicy(m);
 }
 
 function applyMeeting(m) {
@@ -690,6 +706,22 @@ $("#btn-stop").addEventListener("click", async () => {
   toast("会议已结束");
 });
 $("#btn-refresh-board").addEventListener("click", () => refreshMeeting().catch((e) => toast(e.message, true)));
+$("#btn-save-runtime-policy").addEventListener("click", async () => {
+  try {
+    const res = await api("/api/meeting/runtime-policy", {
+      method: "POST",
+      body: JSON.stringify({
+        failure_policy: $("#failure-policy-select").value,
+        require_before_promote: $("#require-before-promote").checked,
+      }),
+    });
+    if (!res.ok) throw new Error(res.error);
+    applyMeeting(res.meeting);
+    toast("运行策略已保存");
+  } catch (err) {
+    toast(err.message, true);
+  }
+});
 
 (async function init() {
   try {

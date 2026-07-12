@@ -32,6 +32,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Guest failure handling: allow_partial | all_must_succeed | fail_fast",
     )
     p_start.add_argument(
+        "--require-before-promote",
+        action="store_true",
+        help="Block claim promote while owner_required (HITL gate)",
+    )
+    p_start.add_argument(
         "--mode",
         choices=["standard", "investment", "research", "interactive"],
         default="standard",
