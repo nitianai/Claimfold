@@ -570,6 +570,7 @@ COUNCIL_MOCK=1 ./council.sh run-parallel
 | 2026-07-11 | §13：Grok + Codex + Claude 三方审议，收窄 PR-A、统一 Slot 事实源、新增 PR-F、调整顺序 |
 | 2026-07-11 | §14：A/B/C 落地后二次审议，收窄 PR-F 范围、确认 F→D→E 不变 |
 | 2026-07-12 | §15：F/D 落地后三次审议，收窄 PR-E、宣布进化方案 v1 收尾路径 |
+| 2026-07-12 | PR-E 落地：claim envelope + verify 不变量 + export bundle；v1 Implemented |
 
 ---
 

@@ -40,14 +40,18 @@ Claimfold/
 │       │       └── runners/        # 串行 / 并行执行
 │       ├── prompts/                # Guest / system / reports 模板
 │       ├── scenarios/              # 会议场景定义
+│       ├── web/                    # 会议室 Web UI（server.py + static/）
 │       └── scripts/                # fetch_equity、compare_meetings 等
 ├── scripts/
 │   ├── ci.sh                       # 本地 CI 门禁
-│   └── check_platform_boundary.sh
+│   ├── check_platform_boundary.sh
+│   ├── council-web.sh              # Web UI 启动脚本
+│   └── export_claims_bundle.py     # 主张账本导出（manifest + jsonl + index）
 ├── tests/                          # 回归测试（引用 App lib + platform）
 ├── docs/                           # 项目规范与实验记录
 │   ├── PLATFORM_APP_SPLIT.md
 │   ├── CLAIM_LIFECYCLE.md
+│   ├── EVOLUTION_PLAN.md       # 进化方案（PR-A…E，对照 Mission OS 原型）
 │   └── archive/
 ├── claims/                         # 跨会话主张账本（gitignore，DATA_ROOT）
 ├── meetings/                       # 会议产物（gitignore，DATA_ROOT）

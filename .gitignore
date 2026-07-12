@@ -18,6 +18,10 @@ claims/
 # Local agent / IDE permissions
 .qoder/
 
+# Local prototypes / duplicates (canonical web: apps/research_council/web/)
+/web/
+ai-meeting-room-prototype.zip
+
 # Editor / OS
 .DS_Store
 *.swp
