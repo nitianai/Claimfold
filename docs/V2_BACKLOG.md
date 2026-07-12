@@ -1,6 +1,6 @@
 # Claimfold v2 Backlog（V0.2 封板后）
 
-> **状态：** Phase 5 ✅ 完成（`missionos-v0.1`）— **Phase 6 产品化/日常化** 待开工  
+> **状态：** Phase 6 产品化/日常化 **进行中**（P6-2 ✅）  
 > **前置：** Research Runtime V0.2 已封板（tag `v0.2`，2026-07-12）  
 > **原则：** Platform（`missionos`）与 App（`research_council`）边界已落地（`PLATFORM_APP_SPLIT` Phase 0–4 ✅）；v2 不推翻拆分，只做硬化与日常可用性。
 
@@ -17,7 +17,7 @@
 | 进化 v1 + V0.2 封板 | ✅ `evolution-v1` + `v0.2` |
 | CI | ✅ 7 步 · 141 tests |
 | Web 会中能力 | ✅ start / speak / runtime-policy / slot 契约 |
-| 日常化文档 | ⏳ Phase 6 |
+| 日常化文档 | ✅ `docs/DAILY_OPS.md`（P6-2）；P6-1 Web 向导待做 |
 
 ---
 
@@ -45,7 +45,7 @@
 | ID | 项 | 交付 | 依赖 |
 |----|-----|------|------|
 | P6-1 | Web 日常流收口 | 启动向导（议题 → context scope → 嘉宾 → 首轮 parallel）UI 与 API 一条龙；错误态可见 | P5 |
-| P6-2 | 日常运行手册 | `docs/DAILY_OPS.md`：`council-web.sh`、`council-daemon.sh watch`、`run-daily`、systemd 示例 | P5 |
+| P6-2 | 日常运行手册 | `docs/DAILY_OPS.md`：`council-web.sh`、`council-daemon.sh watch`、`run-daily`、systemd 示例 | ✅ |
 | P6-3 | 实验归档脚本 | 一键 `metrics` + `compare_meetings` + `gold_revalidation_report` 汇总到 `meetings/<id>/` | P5 |
 | P6-4 | `cmd_init` 卫生 | 默认嘉宾去掉已下线模型名（审计报告 §12） | — |
 | P6-5 | 可选：release 门禁 | tag `v0.2.x` 前跑 `run_gold_revalidation_cli.sh`（Owner 择机，非 CI 强制） | P6-3 |
@@ -85,3 +85,4 @@ P5-1 + P5-2（本批）→ P5-3…P5-6 → P6-2 文档 → P6-1 Web → P6-3 归
 |------|------|
 | 2026-07-12 | 初版：Owner 确认「先平台硬化 → 再产品化」；P5-1/P5-2 开工 |
 | 2026-07-12 | Phase 5 收尾：boundary 扩展、install 文档、`missionos-v0.1` tag、shim allowlist |
+| 2026-07-12 | P6-2：`docs/DAILY_OPS.md` 日常运行手册 |

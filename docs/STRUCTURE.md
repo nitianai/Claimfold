@@ -54,6 +54,7 @@ Claimfold/
 │   ├── PLATFORM_APP_SPLIT.md
 │   ├── CLAIM_LIFECYCLE.md
 │   ├── EVOLUTION_PLAN.md       # 进化方案 v1（已完成）
+│   ├── DAILY_OPS.md            # 日常运行：Web / daemon / run-daily / systemd
 │   ├── V2_BACKLOG.md           # v2：Phase 5 平台硬化 → Phase 6 产品化
 │   └── archive/
 ├── claims/                         # 跨会话主张账本（gitignore，DATA_ROOT）
