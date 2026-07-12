@@ -19,7 +19,7 @@ from missionos.ledger.store import (
     load_events,
     with_ledger_lock,
 )
-from missionos.utils import utc_now
+from missionos.utils import atomic_write_json, utc_now
 
 INDEX_FILE = "claims_index.json"
 
@@ -77,6 +77,52 @@ def append_claim_event(root: Path, event: dict[str, Any]) -> None:
     stamped = ensure_claim_envelope(event)
     assert_claim_ledger_event_type(str(stamped.get("event", "")))
     append_event(root, stamped)
+
+
+def _events_from_locked_ledger(f) -> list[dict[str, Any]]:
+    f.seek(0)
+    events: list[dict[str, Any]] = []
+    for line in f.read().splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            events.append(json.loads(line))
+        except json.JSONDecodeError:
+            continue
+    return events
+
+
+def _write_claim_index_under_lock(root: Path, events: list[dict[str, Any]]) -> dict[str, Any]:
+    views = fold_claims(events)
+    index = {
+        "generated_at": utc_now(),
+        "claim_count": len(views),
+        "claims": views,
+    }
+    ensure_claims_dir(root)
+    atomic_write_json(index_path(root), index)
+    return index
+
+
+def append_claim_events_batch(root: Path, events: list[dict[str, Any]]) -> int:
+    """Append RESPOND/RETIRE events under one flock, then rebuild index once."""
+    if not events:
+        return 0
+    f = with_ledger_lock(root)
+    try:
+        for event in events:
+            stamped = ensure_claim_envelope(event)
+            assert_claim_ledger_event_type(str(stamped.get("event", "")))
+            f.seek(0, 2)
+            f.write(json.dumps(stamped, ensure_ascii=False) + "\n")
+        f.flush()
+        ledger_events = _events_from_locked_ledger(f)
+        _write_claim_index_under_lock(root, ledger_events)
+    finally:
+        fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+        f.close()
+    return len(events)
 
 
 def append_promote_event(root: Path, event: dict[str, Any]) -> str:

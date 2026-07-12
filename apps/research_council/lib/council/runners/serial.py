@@ -11,12 +11,11 @@ from council.cli_runner import invoke_cli
 from council.formatting import artifact_paths, round_tag
 from council.guests import (
     guest_role_id,
-    guest_roster,
     is_investment_mode,
     is_json_mode,
     load_guests_for_meeting,
 )
-from council.adapters.plan_runtime import advance_plan_speaker, load_state_plan, plan_guest_roster
+from council.adapters.plan_runtime import advance_plan_speaker, resolve_runtime_plan
 from council.mock import generate_mock_guest_json
 from council.parsers import (
     apply_parsed_summary,
@@ -48,11 +47,9 @@ def run_one_round(meeting_dir: Path, *, quiet: bool = False) -> str | None:
     """Run one guest turn. Returns auto-stop reason if meeting should end."""
     state = load_state(meeting_dir)
     guests = load_guests_for_meeting(meeting_dir)
-    plan = load_state_plan(meeting_dir, state)
-    if plan is not None:
-        roster = plan_guest_roster(plan, guests)
-    else:
-        roster = guest_roster(guests, serial=True)
+    ctx = resolve_runtime_plan(meeting_dir, state, guests, serial=True)
+    plan = ctx.plan
+    roster = ctx.roster
 
     if state.get("status") == "stopped":
         raise SystemExit("Meeting already stopped. Use ./council.sh start to begin a new one.")

@@ -25,10 +25,17 @@ from council.plan.paths import (
     resolve_scenario_path,
 )
 from council.adapters.plan_runtime import (
+    RuntimePlanContext,
     advance_plan_speaker,
+    advance_past_owner_gate,
+    advance_plan_stage_index,
     build_plan_actor_queue,
+    guests_for_plan_stage,
     load_state_plan,
     plan_guest_roster,
+    plan_stage_pause_reason,
+    resolve_parallel_guests,
+    resolve_runtime_plan,
 )
 
 
@@ -63,9 +70,16 @@ __all__ = [
     "MeetingPlanSnapshot",
     "PlanValidationError",
     "atomic_write_plan",
+    "RuntimePlanContext",
     "advance_plan_speaker",
+    "advance_past_owner_gate",
+    "advance_plan_stage_index",
     "build_meeting_plan",
     "build_plan_actor_queue",
+    "guests_for_plan_stage",
+    "plan_stage_pause_reason",
+    "resolve_parallel_guests",
+    "resolve_runtime_plan",
     "canonical_json_bytes",
     "compile_meeting_plan",
     "first_stage_binding",

@@ -70,6 +70,7 @@ def _scenario_start_state(
         "next_executor_id": first_executor_id,
         "plan_actor_queue": build_plan_actor_queue(plan, roster),
         "plan_actor_index": 0,
+        "plan_stage_index": 0,
         "round": 0,
         "status": "running",
         "owner_required": False,
@@ -277,7 +278,7 @@ def cmd_start(args: argparse.Namespace) -> None:
         print(f"Scenario: {state['scenario_id']}")
         print(f"Plan: {meeting_dir / MEETING_PLAN_FILENAME}")
         print(f"Participants: {len(state['participant_ids'])}")
-        print(f"Mode: {meeting_mode} (legacy runner until PR3)")
+        print(f"Mode: {meeting_mode} (plan-driven runner)")
     else:
         print(f"Mode: {meeting_mode}")
     if meeting_mode == "investment" and not scenario:
@@ -296,7 +297,7 @@ def cmd_start(args: argparse.Namespace) -> None:
     print(f"Directory: {meeting_dir}")
     print(f"First speaker: {state['next_speaker']}")
     if scenario:
-        print("Next: ./council.sh run  (PR3 will read meeting_plan.json)")
+        print("Next: ./council.sh run  (reads meeting_plan.json)")
     elif meeting_mode == "investment":
         print("Next: ./council.sh run-auto")
     elif meeting_mode == "research":

@@ -16,15 +16,21 @@ from council.adapters.meeting_events import (
 )
 from council.adapters.session_adapter import artifact_paths_research
 from council.claims import (
-    append_claim_event,
+    append_claim_events_batch,
     parse_claim_responses_from_raw,
-    rebuild_index,
+)
+from council.adapters.plan_runtime import (
+    advance_plan_stage_index,
+    load_state_plan,
+    plan_stage_pause_reason,
+    resolve_parallel_guests,
+    resolve_runtime_plan,
 )
 from council.config import CONFIG_FILE, DATA_ROOT
 from council.context.market import parse_script_equity_raw
 from council.context.service import MeetingContextService, RoundContextSnapshot
 from council.formatting import round_tag
-from council.guests import guest_roster, is_script_guest, load_guests_for_meeting
+from council.guests import is_script_guest, load_guests_for_meeting
 from council.interactive.events import (
     publish_context_observed,
     publish_floor_granted,
@@ -65,7 +71,7 @@ from council.parsers.summary_json import (
     summary_json_to_md,
 )
 from council.parsers import parse_summary_sections, run_summarizer_for_guest
-from council.prompts import generate_research_prompt, resolve_selected_guests
+from council.prompts import generate_research_prompt
 from council.selection import load_full_config
 from council.failure_policy import (
     apply_failure_policy_after_round,
@@ -360,6 +366,10 @@ def _finalize_interactive_round(
         hitl.update({"open": True, "reason": interrupt_reason, "round": round_num})
         state["hitl"] = hitl
 
+    plan = load_state_plan(meeting_dir, state)
+    if plan is not None:
+        advance_plan_stage_index(state)
+
     update_stop_recommendation(state)
     state["session_status"] = "idle"
     state["current_speaker"] = None
@@ -430,12 +440,23 @@ def run_interactive_turn(meeting_dir: Path, *, quiet: bool = False) -> tuple[str
         return f"已达最大轮次 {state.get('max_rounds', 12)}", False
 
     guests = load_guests_for_meeting(meeting_dir)
-    roster = guest_roster(guests)
+    ctx = resolve_runtime_plan(meeting_dir, state, guests)
     load_full_config(CONFIG_FILE)
+
+    if ctx.plan is not None:
+        gate_reason = plan_stage_pause_reason(ctx.plan, state)
+        if gate_reason:
+            state["owner_required"] = True
+            hitl = dict(state.get("hitl") or {})
+            hitl.update({"open": True, "reason": gate_reason, "round": state.get("round", 0)})
+            state["hitl"] = hitl
+            save_state(meeting_dir, state)
+            print(owner_pause_message(state))
+            raise SystemExit(2)
 
     session_status = state.get("session_status", "idle")
     if session_status in ("idle", "ended"):
-        selected = resolve_selected_guests(state, guests, roster)
+        selected = resolve_parallel_guests(ctx, state, guests)
         if not selected:
             raise SystemExit("No guests selected. Run: ./council.sh select <guest>...")
         if not quiet:
@@ -555,12 +576,12 @@ def run_interactive_turn(meeting_dir: Path, *, quiet: bool = False) -> tuple[str
     pending_claim_events: list[dict[str, Any]] = []
     pending_claim_events.extend(entry.get("respond_events", []))
     if pending_claim_events:
-        for ev in pending_claim_events:
-            if not ev.get("guest"):
-                ev = {**ev, "guest": guest}
-            append_claim_event(DATA_ROOT, ev)
+        normalized = [
+            {**ev, "guest": ev.get("guest") or guest} for ev in pending_claim_events
+        ]
+        append_claim_events_batch(DATA_ROOT, normalized)
+        for ev in normalized:
             publish_claim_responded(event_log, ev)
-        rebuild_index(DATA_ROOT)
 
     if not entry.get("success"):
         if not quiet:

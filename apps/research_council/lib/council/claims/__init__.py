@@ -33,6 +33,7 @@ from missionos.ledger.store import (
 # claim_ledger 依赖 stream_isolation；须在子模块之后导入以避免循环
 from council.adapters.claim_ledger import (  # noqa: E402
     append_claim_event,
+    append_claim_events_batch,
     append_promote_event,
     compute_fingerprint,
     fold_claims,
@@ -51,6 +52,7 @@ __all__ = [
     "RESPONSE_TYPES",
     "CLAIM_EVENT_SCHEMA_VERSION",
     "append_claim_event",
+    "append_claim_events_batch",
     "append_event",
     "append_promote_event",
     "claims_views_hash",

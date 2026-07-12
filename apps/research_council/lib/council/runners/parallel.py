@@ -7,9 +7,14 @@ from pathlib import Path
 from typing import Any
 
 from council.claims import (
-    append_claim_event,
+    append_claim_events_batch,
     parse_claim_responses_from_raw,
-    rebuild_index,
+)
+from council.adapters.plan_runtime import (
+    advance_plan_stage_index,
+    plan_stage_pause_reason,
+    resolve_parallel_guests,
+    resolve_runtime_plan,
 )
 from council.adapters.meeting_events import (
     meeting_event_log,
@@ -34,7 +39,7 @@ from council.adapters.executor_policy import ExecutorDeniedError
 from council.cli_runner import invoke_cli, invoke_script
 from council.config import CONFIG_FILE, DATA_ROOT
 from council.formatting import round_tag
-from council.guests import guest_roster, is_script_guest, load_guests_for_meeting
+from council.guests import is_script_guest, load_guests_for_meeting
 from council.mock import generate_mock_research_output
 from council.parsers import parse_summary_sections, run_summarizer_for_guest
 from council.failure_policy import (
@@ -60,7 +65,7 @@ from council.meeting_helpers import (
     update_stop_recommendation,
     write_error_file,
 )
-from council.prompts import generate_research_prompt, resolve_selected_guests
+from council.prompts import generate_research_prompt
 
 
 def process_parallel_guest(
@@ -226,7 +231,8 @@ def run_one_parallel_round(meeting_dir: Path, *, quiet: bool = False) -> str | N
     """Run one parallel round with selected_guests. Returns stop reason if needed."""
     state = load_state(meeting_dir)
     guests = load_guests_for_meeting(meeting_dir)
-    roster = guest_roster(guests)
+    ctx = resolve_runtime_plan(meeting_dir, state, guests)
+    roster = ctx.roster
     full_cfg = load_full_config(CONFIG_FILE)
     max_workers = max_parallel_from_config(full_cfg)
 
@@ -237,11 +243,22 @@ def run_one_parallel_round(meeting_dir: Path, *, quiet: bool = False) -> str | N
         print(owner_pause_message(state))
         raise SystemExit(2)
 
+    if ctx.plan is not None:
+        gate_reason = plan_stage_pause_reason(ctx.plan, state)
+        if gate_reason:
+            state["owner_required"] = True
+            hitl = dict(state.get("hitl") or {})
+            hitl.update({"open": True, "reason": gate_reason, "round": state.get("round", 0)})
+            state["hitl"] = hitl
+            save_state(meeting_dir, state)
+            print(owner_pause_message(state))
+            raise SystemExit(2)
+
     if state["round"] >= state.get("max_rounds", 12):
         return f"已达最大轮次 {state.get('max_rounds', 12)}"
 
     round_num = state["round"] + 1
-    selected = resolve_selected_guests(state, guests, roster)
+    selected = resolve_parallel_guests(ctx, state, guests)
     if not selected:
         raise SystemExit("No guests selected for parallel round.")
 
@@ -315,10 +332,9 @@ def run_one_parallel_round(meeting_dir: Path, *, quiet: bool = False) -> str | N
     for entry in entries:
         pending_claim_events.extend(entry.get("respond_events", []))
     if pending_claim_events:
+        append_claim_events_batch(DATA_ROOT, pending_claim_events)
         for ev in pending_claim_events:
-            append_claim_event(DATA_ROOT, ev)
             publish_claim_responded(event_log, ev)
-        rebuild_index(DATA_ROOT)
 
     cp_total = cf_total = oq_total = 0
     for entry in entries:
@@ -396,6 +412,9 @@ def run_one_parallel_round(meeting_dir: Path, *, quiet: bool = False) -> str | N
         hitl = dict(state.get("hitl") or {})
         hitl.update({"open": True, "reason": interrupt_reason, "round": round_num})
         state["hitl"] = hitl
+
+    if ctx.plan is not None:
+        advance_plan_stage_index(state)
 
     update_stop_recommendation(state)
     apply_guest_slots_projection(meeting_dir, state)

@@ -145,4 +145,4 @@ def test_parallel_round_merges_claim_events_on_main_thread_only():
 
     assert "append_event" not in guest_block
     assert "pending_claim_events" in round_block
-    assert "for ev in pending_claim_events" in round_block
+    assert "append_claim_events_batch" in round_block

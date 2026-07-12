@@ -11,6 +11,7 @@ from council.meeting_helpers import stop_suggestions
 from council.adapters.meeting_events import meeting_event_log
 from council.hitl import apply_hitl_projection, resolve_owner_interrupt
 from council.slots import apply_guest_slots_projection, format_guest_slots_summary
+from council.adapters.plan_runtime import advance_past_owner_gate, load_state_plan
 from council.state_store import get_current_meeting_dir, load_state, save_state
 
 
@@ -80,6 +81,9 @@ def cmd_continue(_: argparse.Namespace) -> None:
         raise SystemExit("Meeting already stopped.")
     event_log = meeting_event_log(meeting_dir, state.get("meeting_id", meeting_dir.name))
     resolve_owner_interrupt(event_log, state, action="continue")
+    plan = load_state_plan(meeting_dir, state)
+    if plan is not None:
+        advance_past_owner_gate(state, plan)
     state["guest_turns_since_owner"] = 0
     state["rounds_since_owner"] = 0
     state["status"] = "running"
