@@ -21,6 +21,8 @@ from council.config import CONFIG_FILE, CURRENT_MEETING_FILE, DATA_ROOT, MEETING
 
 from council.guests import guest_roster, load_guests, load_guests_for_meeting
 from council.guest_aliases import GUEST_ALIASES
+from council.hitl import apply_hitl_projection
+from council.slots import apply_guest_slots_projection
 from council.state_store import load_state, save_state
 from council.guest_overrides import load_overrides, save_overrides
 from council.web.chat import build_chat_feed, build_council_status, build_guest_positions
@@ -124,6 +126,8 @@ class CouncilWebService:
             return {"active": False, "meetings": self.list_meetings()}
 
         state = load_state(meeting_dir)
+        apply_guest_slots_projection(meeting_dir, state)
+        apply_hitl_projection(meeting_dir, state)
         guests_cfg = load_guests_for_meeting(meeting_dir)
         roster = guest_roster(guests_cfg)
         guest_options = [
@@ -143,6 +147,10 @@ class CouncilWebService:
             "round": state.get("round", 0),
             "meeting_mode": state.get("meeting_mode", ""),
             "owner_required": state.get("owner_required", False),
+            "failure_policy": state.get("failure_policy", "allow_partial"),
+            "hitl": state.get("hitl") or {},
+            "guest_slots": state.get("guest_slots") or {},
+            "partial_warnings": state.get("partial_warnings") or [],
             "selected_guests": state.get("selected_guests", []),
             "current_focus": state.get("current_focus", ""),
             "confirmed_points": state.get("confirmed_points", []),

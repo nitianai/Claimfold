@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from council.guests import load_guests_for_meeting
+from council.slots import slot_key
 from council.interactive.state import is_interactive_mode
 from council.web.voice import extract_guest_voice
 from missionos.session.events import load_session_events
@@ -28,6 +29,9 @@ _EVENT_LABELS = {
     "session_paused": "会话暂停",
     "session_ended": "交互会话结束",
     "interrupt_requested": "打断申请",
+    "guest_slot_updated": "嘉宾槽状态更新",
+    "OwnerInterruptRaised": "需主持人介入",
+    "OwnerInterruptResolved": "主持人已放行",
 }
 
 
@@ -225,6 +229,44 @@ def build_guest_positions(
     return positions
 
 
+_SLOT_PHASE_TO_STATUS = {
+    "Succeeded": "done",
+    "Running": "running",
+    "Failed": "failed",
+    "Skipped": "skipped",
+    "Pending": "idle",
+}
+
+
+def _detail_from_slot(slot: dict[str, Any]) -> str:
+    phase = str(slot.get("phase") or "")
+    if phase == "Succeeded":
+        attempts = slot.get("attempts", 1)
+        return f"完成 · 尝试 {attempts}"
+    if phase == "Failed":
+        return str(slot.get("message") or "失败")[:80]
+    if phase == "Skipped":
+        return str(slot.get("message") or "已跳过")[:80]
+    if phase == "Running":
+        return "发言中…"
+    if phase == "Pending":
+        return "等待执行"
+    return "待命"
+
+
+def _slots_for_round(state: dict[str, Any], round_num: int) -> dict[str, dict[str, Any]]:
+    by_guest: dict[str, dict[str, Any]] = {}
+    for key, slot in (state.get("guest_slots") or {}).items():
+        if int(slot.get("round") or 0) != round_num:
+            continue
+        guest_id = str(slot.get("guest_id") or "")
+        if not guest_id and ":" in key:
+            guest_id = key.split(":", 1)[1]
+        if guest_id:
+            by_guest[guest_id] = {**slot, "slot": key}
+    return by_guest
+
+
 def build_council_status(
     meeting_dir: Path,
     state: dict[str, Any],
@@ -232,7 +274,7 @@ def build_council_status(
     *,
     task: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
-    """Per-guest run status for Inspector Council tab."""
+    """Per-guest run status — guest_slots phase 优先，guest_completed 回退。"""
     guests = guests or load_guests_for_meeting(meeting_dir)
     selected = list(state.get("selected_guests") or [])
     current_round = int(state.get("round") or 0)
@@ -254,14 +296,24 @@ def build_council_status(
             if guest:
                 completed[guest] = ev
 
-    roster = selected or round_guests
+    slot_by_guest = _slots_for_round(state, current_round)
+    slot_guests = list(slot_by_guest.keys())
+    roster = selected or round_guests or slot_guests
     current_speaker = state.get("current_speaker")
     speaking_queue = list(state.get("speaking_queue") or [])
     interactive_active = is_interactive_mode(state) and state.get("session_status") in ("active", "paused")
 
     statuses: list[dict[str, Any]] = []
     for gid in roster:
-        if gid in completed:
+        phase = ""
+        status = "idle"
+        detail = "待命"
+        slot = slot_by_guest.get(gid)
+        if slot:
+            phase = str(slot.get("phase") or "")
+            status = _SLOT_PHASE_TO_STATUS.get(phase, "idle")
+            detail = _detail_from_slot(slot)
+        elif gid in completed:
             ev = completed[gid]
             status = "done" if ev.get("success", True) else "failed"
             detail = f"{ev.get('duration_s', '?')}s"
@@ -282,13 +334,17 @@ def build_council_status(
         else:
             status = "idle"
             detail = "待命"
+
         statuses.append(
             {
                 "guest": gid,
                 "guest_label": _guest_label(guests, gid),
                 "status": status,
+                "phase": phase or None,
                 "detail": detail,
                 "round": current_round,
+                "attempts": slot.get("attempts") if slot else None,
+                "slot": slot.get("slot") if slot else slot_key(current_round, gid) if current_round else None,
             }
         )
     return statuses

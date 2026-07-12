@@ -133,6 +133,48 @@ function renderMeetingList() {
   });
 }
 
+const HITL_REASON_LABELS = {
+  every_n_rounds: "已达轮次上限，需主持人放行",
+  guest_failure: "有嘉宾失败，需主持人决策",
+};
+
+const STATUS_CLASS = {
+  done: "",
+  running: "speaking",
+  queued: "queued",
+  failed: "failed",
+  skipped: "skipped",
+  idle: "",
+};
+
+function renderHitlBanner(m) {
+  const el = $("#hitl-banner");
+  if (!m?.active || !m?.owner_required) {
+    el.hidden = true;
+    el.innerHTML = "";
+    return;
+  }
+  const hitl = m.hitl || {};
+  const reason = hitl.reason || "owner_required";
+  const label = HITL_REASON_LABELS[reason] || `需主持人介入（${reason}）`;
+  el.hidden = false;
+  el.innerHTML = `<strong>⏸ Owner 闸门</strong><span>${escapeHtml(label)}</span><span class="muted">Round ${hitl.round || m.round || 0}</span>`;
+}
+
+function renderPartialBanner(m) {
+  const el = $("#partial-banner");
+  const warnings = m?.partial_warnings || [];
+  if (!m?.active || !warnings.length) {
+    el.hidden = true;
+    el.innerHTML = "";
+    return;
+  }
+  const latest = warnings[warnings.length - 1];
+  const failed = (latest?.failed_guests || []).join(", ");
+  el.hidden = false;
+  el.innerHTML = `<strong>⚠ 部分成功</strong><span>Round ${latest?.round || "?"} · 失败：${escapeHtml(failed || "—")}</span>`;
+}
+
 function renderSpeakers(m) {
   const strip = $("#speaker-strip");
   const online = $("#online-list");
@@ -155,12 +197,13 @@ function renderSpeakers(m) {
     const model = row.model_label || cardModelLabel(card) || row.model || "";
     const st = sm.get(row.id) || { status: "idle", detail: "待命" };
     const cls = avatarClass(card || { kind: avatarClass({ id: row.id }) });
-    const active = row.id === speaking ? "speaking" : st.status === "queued" ? "queued" : "";
+    const statusCls = row.id === speaking ? "speaking" : (STATUS_CLASS[st.status] || "");
+    const phaseTag = st.phase ? `<span class="phase-tag phase-${escapeHtml(st.phase)}">${escapeHtml(st.phase)}</span>` : "";
     const cardActive = row.id === speaking ? "active" : "";
     return {
-      strip: `<article class="speaker ${active}">
+      strip: `<article class="speaker ${statusCls}">
         <div class="avatar ${cls}">${initials(name)}</div>
-        <div><div class="speaker-name">${escapeHtml(name)}</div>
+        <div><div class="speaker-name">${escapeHtml(name)} ${phaseTag}</div>
         <div class="speaker-role">${escapeHtml(model)} · ${escapeHtml(st.detail)}</div></div></article>`,
       online: `<article class="guest-card ${cardActive}" data-edit-card="${escapeHtml(card?.source === "custom" ? card.id : "")}">
         <div class="avatar ${cls}">${initials(name)}</div>
@@ -234,6 +277,8 @@ function updateHeader(m) {
     $(`#${id}`).disabled = !active || m?.status === "stopped";
   });
   $("#btn-continue").hidden = !m?.owner_required;
+  renderHitlBanner(m);
+  renderPartialBanner(m);
 
   if (!active) {
     $("#active-topic").textContent = "选择或发布议题";
@@ -249,7 +294,8 @@ function updateHeader(m) {
 
   const mode = m.meeting_mode === "interactive" ? "投资研讨会（交互话轮）" : "并行研究会议";
   $("#active-topic").textContent = m.topic || m.meeting_id;
-  $("#meeting-context").textContent = `${mode} · ${m.current_focus ? "上下文：" + m.current_focus : "上下文未设置"} · Round ${m.round || 0}`;
+  const policy = m.failure_policy ? ` · 策略 ${m.failure_policy}` : "";
+  $("#meeting-context").textContent = `${mode} · ${m.current_focus ? "上下文：" + m.current_focus : "上下文未设置"} · Round ${m.round || 0}${policy}`;
   $("#meeting-type-label").textContent = mode;
   const dot = m.task?.running ? "running" : m.status === "stopped" ? "stopped" : "idle";
   $("#pill-status").innerHTML = `<span class="dot ${dot}"></span>${m.status === "stopped" ? "已结束" : m.task?.running ? "进行中" : "会议中"}`;

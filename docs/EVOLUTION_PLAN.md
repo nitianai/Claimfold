@@ -596,7 +596,7 @@ COUNCIL_MOCK=1 ./council.sh run-parallel
 - [x] **PR-A：** `test_stream_isolation.py` + `test_claim_promotion_gates.py`；收紧 raw 证据；`ci.sh` 绿（`09da620`）
 - [x] **PR-B：** `slots.py` + events 写入 + parallel/interactive 共用 + `status`/`repair-slots`（`1cbc9e8`）
 - [x] **PR-C：** FailurePolicy 三态 + `OwnerInterruptRaised/Resolved`；不拦 promote（`80a005e`）
-- [ ] **PR-F：** Web 消费 slot/HITL；`rc-*` 映射测试
+- [x] **PR-F：** Web 消费 slot/HITL；`rc-*` 映射测试
 - [ ] **PR-D / E：** 按原文档；每步 `ci.sh` + `check_platform_boundary.sh`
 
 ---
@@ -646,11 +646,11 @@ COUNCIL_MOCK=1 ./council.sh run-parallel
 
 ### PR-F 开工清单（复制即用）
 
-- [ ] `service.meeting_payload`：投影 slots/hitl + 四字段暴露
-- [ ] `chat.build_council_status`：slot phase 驱动；Skipped/Failed 文案
-- [ ] `web/static/app.js` + `style.css`：strip 与 HITL 条
-- [ ] `tests/app/test_web_slot_contract.py`
-- [ ] `./scripts/ci.sh` 全绿 + 中文 commit
+- [x] `service.meeting_payload`：投影 slots/hitl + 四字段暴露
+- [x] `chat.build_council_status`：slot phase 驱动；Skipped/Failed 文案
+- [x] `web/static/app.js` + `style.css`：strip 与 HITL 条
+- [x] `tests/app/test_web_slot_contract.py`
+- [x] `./scripts/ci.sh` 全绿 + 中文 commit
 
 ### PR-F 之后（备忘，本次不开工）
 
