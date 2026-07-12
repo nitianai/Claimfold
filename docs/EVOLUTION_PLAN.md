@@ -569,6 +569,7 @@ COUNCIL_MOCK=1 ./council.sh run-parallel
 | 2026-07-11 | 初版：基于 Mission OS 研究原型对照 + Claimfold 现状，输出 PR-A…E 可执行方案 |
 | 2026-07-11 | §13：Grok + Codex + Claude 三方审议，收窄 PR-A、统一 Slot 事实源、新增 PR-F、调整顺序 |
 | 2026-07-11 | §14：A/B/C 落地后二次审议，收窄 PR-F 范围、确认 F→D→E 不变 |
+| 2026-07-12 | §15：F/D 落地后三次审议，收窄 PR-E、宣布进化方案 v1 收尾路径 |
 
 ---
 
@@ -656,5 +657,69 @@ COUNCIL_MOCK=1 ./council.sh run-parallel
 ### PR-D / E 备忘
 
 - [x] **PR-D：** `executor_policy.py` inspect_invoke + ExecutorDenied + `max_parallel_guests` 别名
-- [ ] **PR-E：** claims envelope `schema_version` + `claim verify` 扩展
-- **可选 PR-C.2：** `require_before_promote` 拦截（独立小 PR，不挡 F/D）
+- [ ] **PR-E：** claims envelope `schema_version` + `claim verify` 扩展（见 §15）
+- **可选 PR-C.2：** `require_before_promote` 拦截（进化方案 v1 之后，不挡 E）
+
+---
+
+## 15. 三方三次审议（Grok + Codex + Claude，2026-07-12 — A/B/C/F/D 已落地）
+
+### 现状核对
+
+| PR | 提交 | 结论 |
+|----|------|------|
+| A | `09da620` | 流隔离 + promote 门禁 |
+| B | `1cbc9e8` | GuestSlot 事件 + 投影 |
+| C | `80a005e` | FailurePolicy + HITL |
+| F | `14660b8` | Web 对齐 slot/HITL 契约 |
+| D | `640654a` | inspect_invoke + ExecutorDenied |
+
+**进化方案主链仅剩 PR-E。** 控制面（CLI/events/state/Web）与执行策略已闭环；主张账本「投影只读」仍是最后缺口。
+
+### 各方立场摘要
+
+**Grok：** 主链 A→B→C→F→D 已交付，**应宣告进化方案 v1 进入收尾阶段**，全力完成 PR-E 后更新 README/§0 状态为 *Implemented*。E 不做 SQLite、不做 bundle import、不改历史 `claims.jsonl` 行。`rebuild_index` 并发竞态（审计报告）**单列 hotfix**，不塞进 E。
+
+**Codex：** 同意 E 收尾。`claim verify` 应拆为两层且均 CI 覆盖：（1）既有 `verify_three_meeting_chain`；（2）新增 `verify_index_rebuild_invariant`（删 index → rebuild → 与磁盘深度比较或 hash）。新写入事件补 `schema_version: 1`；缺省视为 1。`export_claims_bundle.py` 仅 manifest + jsonl + 重建 index，**v1 不实现 import**。
+
+**Claude：** 同意。`append_claim_event` / `append_promote_event` 统一走 envelope 助手，避免散落字段。若 E 超 ~350 行可拆 E1（verify+schema）与 E2（export），但优先单 PR。`require_before_promote`、Web 改 failure_policy、plan-runner 读 `meeting_plan` 均属 **v1 之后 backlog**，不扩展 E。
+
+### 一致采纳（PR-E 可执行范围）
+
+| 项 | 决定 |
+|----|------|
+| **顺序** | **仅 PR-E** → 进化方案 v1 完成；不插入新 PR |
+| **E1 envelope** | 新事件写入 `schema_version: 1`（`event`/`ts` 已有）；读路径缺省=1 |
+| **E2 verify** | `claim verify` = 三场会议链 **+** index 重建一致性 **+** claim_id 不回退 / ts 单调（可测子集） |
+| **E3 export** | `scripts/export_claims_bundle.py`：jsonl + rebuild index + manifest（sha256） |
+| **E4 测试** | `tests/app/test_claim_verify_rebuild.py` |
+| **不做** | bundle import、SQLite、改写历史 ledger、Platform 改动、`require_before_promote` |
+
+### 分歧与裁决
+
+| 分歧 | 裁决 |
+|------|------|
+| Codex：verify 必须 hash 比较 index | **采纳** — 深度比较或 canonical hash 二选一，测试锁死 |
+| Grok：E 完成后是否立刻 push `main` | **建议** — E + 文档后 push；实现 Agent 不强制 |
+| Claude：export 可否延后 | **否决** — 原文档 PR-E 含 export；保持轻量脚本一并交付 |
+
+### v1 完成之后（backlog，本次不开工）
+
+| 项 | 说明 |
+|----|------|
+| PR-C.2 | `require_before_promote` 拦截 promote |
+| Hotfix | 并行 RESPOND 后单次 `rebuild_index`（审计 P1） |
+| PR3 | scenario `meeting_plan` runner 读 plan（已有文档） |
+| Web | failure_policy 可编辑（CLI 只读已够 v1） |
+
+### PR-E 开工清单（复制即用）
+
+- [ ] `claims/` 模块：`ensure_claim_envelope` + 写入路径挂接
+- [ ] `verify_index_rebuild_invariant` + 扩展 `cmd_claim_verify`
+- [ ] `scripts/export_claims_bundle.py`
+- [ ] `tests/app/test_claim_verify_rebuild.py`
+- [ ] `ci.sh` 全绿；§0 状态改为 Implemented；中文 commit
+
+### 进化方案 v1 完成定义
+
+当 PR-E 合并且 CI 绿时，视为 `docs/EVOLUTION_PLAN.md` **v1 实现完成**；后续需求新开 backlog 或 v2 文档，不再在本文件堆 PR-F/G。
